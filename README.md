@@ -10,7 +10,7 @@ A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com)
 ## Installation
 
 ```
-npm install sonolus-hanipure-engine --save
+npm install sonolus-hwpl-engine --save
 ```
 
 ## Custom Resources
