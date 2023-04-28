@@ -1,6 +1,6 @@
-# Sonolus Bandori Engine
+# Sonolus Hanipure Engine
 
-A recreation of BanG Dream! Girls Band Party engine in [Sonolus](https://sonolus.com).
+A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com).
 
 ## Links
 
@@ -10,7 +10,7 @@ A recreation of BanG Dream! Girls Band Party engine in [Sonolus](https://sonolus
 ## Installation
 
 ```
-npm install sonolus-bandori-engine --save
+npm install sonolus-hanipure-engine --save
 ```
 
 ## Custom Resources
@@ -19,7 +19,7 @@ Engine ID: `1`
 
 ### Skin Sprites
 
-| ID  | Sprite                         | Bandori Asset Path                                    |
+| ID  | Sprite                         | Hanipure Asset Path                                   |
 | --- | ------------------------------ | ----------------------------------------------------- |
 | 1   | Stage                          | `/ingameskin/fieldskin/{name}/bg_line_rhythm`         |
 | 2   | Judgment Line                  | `/ingameskin/fieldskin/{name}/game_play_line`         |
@@ -30,7 +30,7 @@ Engine ID: `1`
 
 ### Effect Clips
 
-| ID  | Clip                     | Bandori Asset Path                         |
+| ID  | Clip                     | Hanipure Asset Path                        |
 | --- | ------------------------ | ------------------------------------------ |
 | 1   | Directional Flick Single | `/sound/tapseskin/{name}/directional_fl`   |
 | 2   | Directional Flick Double | `/sound/tapseskin/{name}/directional_fl_2` |
@@ -79,8 +79,8 @@ Engine Thumbnail.
 -   `engineThumbnail.buffer`: buffer of file.
 -   `engineThumbnail.hash`: hash of file.
 
-### `fromBestdori(chart)`
+### `fromHanipure(chart)`
 
-Converts Bestdori chart to Level Data.
+Converts Hanipure chart to Level Data.
 
--   `chart`: Bestdori chart.
+-   `chart`: Hanipure chart.

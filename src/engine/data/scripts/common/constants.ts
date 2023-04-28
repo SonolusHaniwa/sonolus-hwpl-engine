@@ -126,7 +126,7 @@ export const stageTop = If(
     screenTop
 )
 
-export const laneWidth = Divide(stageWidth, 2, 4.375)
+export const laneWidth = Divide(stageWidth, 2, 3, 1.25)
 export const laneBottom = stageBottom
 export const laneTop = Lerp(stageTop, stageBottom, 0.05)
 

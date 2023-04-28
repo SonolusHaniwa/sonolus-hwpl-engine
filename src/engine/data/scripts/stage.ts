@@ -8,10 +8,12 @@ import {
     EntityInfo,
     EntityMemory,
     Equal,
+    Floor,
     GreaterOr,
     HasSkinSprite,
     If,
     Lerp,
+    Less,
     LessOr,
     Multiply,
     Not,
@@ -210,9 +212,12 @@ export function stage(): Script {
         const lane = EntityMemory.to<number>(0)
 
         return [
-            playStageSFX(),
-
-            lane.set(Round(Divide(TouchX, laneWidth))),
+            lane.set(Floor(Divide(TouchX, laneWidth))),
+            If(
+                Less(lane, 3),
+                playStageSFX(),
+                And()
+            ),
             playLaneEffect(lane),
             playSlotEffect(lane),
         ]

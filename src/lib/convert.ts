@@ -1,4 +1,5 @@
 import { LevelData, LevelDataEntity } from 'sonolus-core'
+import { Archetype } from 'sonolus.js/dist'
 
 export type ChartObject =
     | SingleObject
@@ -12,14 +13,14 @@ type ObjectBase = {
     beat: number
 }
 
-type NoteBase = ObjectBase & {
+export type NoteBase = ObjectBase & {
     lane: number
     flick?: true
     skill?: true
     charge?: true
 }
 
-type SingleObject = NoteBase & {
+export type SingleObject = NoteBase & {
     type: 'Single'
 }
 
@@ -29,7 +30,7 @@ type DirectionalObject = NoteBase & {
     width: number
 }
 
-type SlideObject = {
+export type SlideObject = {
     type: 'Slide'
     connections: Connection[]
 }
@@ -53,7 +54,96 @@ type SystemObject = ObjectBase & {
     data: string
 }
 
-export function fromBestdori(
+export function fromHanipure(chart: Array<Array<number>>, archetypes: {
+    initializationIndex: number
+    stageIndex: number
+    tapNoteIndex: number
+    flickNoteIndex: number
+    directionalFlickNoteIndex: number
+    slideStartNoteIndex: number
+    slideTickNoteIndex: number
+    slideEndNoteIndex: number
+    slideFlickNoteIndex: number
+    straightSliderIndex: number
+    curvedSliderIndex: number
+}): LevelData {
+    let convertChart: ChartObject[] = new Array;
+    convertChart.push({"type":"BPM","bpm":150,"beat":0});
+    for (let i = 0; i < chart.length; i++) {
+        let x: Array<number> = chart[i];
+        if (x[0] == 1) {
+            let xx: SingleObject = {
+                beat: x[1] * 2,
+                lane: x[2] - 1,
+                type: "Single"
+            }; convertChart.push(xx);
+        } else if (x[0] == 2) {
+            let xx: SingleObject = {
+                beat: x[1] * 2,
+                lane: x[2] - 1,
+                type: "Single",
+                flick: true
+            }; convertChart.push(xx);
+        } else if (x[0] == 11) {
+            let xx: SlideObject = {
+                type: "Slide",
+                connections: [
+                    {
+                        beat: x[1] * 2,
+                        lane: x[2] - 1
+                    }
+                ]
+            };
+            for (let j = 0; j < chart.length; j++) {
+                if (chart[j][0] == 12 && chart[j][3] == x[3]) {
+                    xx.connections.push({
+                        beat: chart[j][1] * 2,
+                        lane: chart[j][2] - 1
+                    });
+                } if (chart[j][0] == 13 && chart[j][3] == x[3]) {
+                    xx.connections.push({
+                        beat: chart[j][1] * 2,
+                        lane: chart[j][2] - 1,
+                        flick: true
+                    });
+                }
+            } convertChart.push(xx);
+        } else if (x[0] == 21) {
+            let xx: SlideObject = {
+                type: "Slide",
+                connections: [
+                    {
+                        beat: x[1] * 2,
+                        lane: x[2] - 1
+                    }
+                ]
+            };
+            for (let j = 0; j < chart.length; j++) {
+                if (chart[j][0] == 22 && chart[j][3] == x[3]) {
+                    xx.connections.push({
+                        beat: chart[j][1] * 2,
+                        lane: chart[j][2] - 1
+                    });
+                } if (chart[j][0] == 23 && chart[j][3] == x[3]) {
+                    xx.connections.push({
+                        beat: chart[j][1] * 2,
+                        lane: chart[j][2] - 1,
+                    });
+                } if (chart[j][0] == 24 && chart[j][3] == x[3]) {
+                    xx.connections.push({
+                        beat: chart[j][1] * 2,
+                        lane: chart[j][2] - 1,
+                        flick: true
+                    });
+                }
+            } convertChart.push(xx);
+        }
+    }
+    console.log(convertChart)
+    return _fromBestdori(convertChart, archetypes)
+}
+
+export function _fromBestdori(
     chart: ChartObject[],
     archetypes: {
         initializationIndex: number

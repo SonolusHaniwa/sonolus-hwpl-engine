@@ -1,10 +1,16 @@
 {
-  "name": "sonolus-bandori-engine",
-  "version": "0.7.1",
-  "description": "A recreation of BanG Dream! Girls Band Party engine in Sonolus",
-  "author": "NonSpicyBurrito",
-  "repository": "github:NonSpicyBurrito/sonolus-bandori-engine",
+  "name": "hwpl",
+  "title": "Hanipure",
+  "subtitle": "Honeyworks Premium Live",
+  "version": "0.0.1",
+  "description": "A recreation of Honeyworks Premium Live engine in Sonolus",
+  "author": "LittleYang0531",
+  "repository": "github:LittleYang0531/sonolus-hwpl-engine",
   "license": "MIT",
+  "skin": "hwpl-00",
+  "background": "bandori-live-00",
+  "effect": "bandori-00",
+  "particle": "bandori-1",
   "keywords": [
     "Sonolus"
   ],

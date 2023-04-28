@@ -4,6 +4,8 @@ import {
     And,
     Code,
     DestroyParticleEffect,
+    If,
+    Less,
     MoveParticleEffect,
     Multiply,
     SpawnParticleEffect,
@@ -22,6 +24,7 @@ import {
     laneTop,
 } from './constants'
 import { NoteSharedMemoryPointer } from './note'
+import { playStageSFX } from './sfx'
 import {
     getLaneBottomCenter,
     getLaneBottomLeft,
@@ -32,38 +35,46 @@ import {
 import { rectByEdge, rectBySize } from './utils'
 
 export function playSlotEffect(lane: Code<number>) {
-    return And(
-        options.isSlotEffectEnabled,
-        SpawnParticleEffect(
-            ParticleEffect.SlotLinear,
-            ...rectByEdge(
-                Subtract(getLaneBottomCenter(lane), halfSlotEffectSize),
-                Add(getLaneBottomCenter(lane), halfSlotEffectSize),
-                laneBottom,
-                Add(laneBottom, Multiply(halfSlotEffectSize, 2))
-            ),
-            0.6,
-            false
-        )
+    return If(
+        Less(lane, 3),
+        And(
+            options.isSlotEffectEnabled,
+            SpawnParticleEffect(
+                ParticleEffect.SlotLinear,
+                ...rectByEdge(
+                    Subtract(getLaneBottomCenter(lane), halfSlotEffectSize),
+                    Add(getLaneBottomCenter(lane), halfSlotEffectSize),
+                    laneBottom,
+                    Add(laneBottom, Multiply(halfSlotEffectSize, 2))
+                ),
+                0.6,
+                false
+            )
+        ),
+        And()
     )
 }
 
 export function playLaneEffect(lane: Code<number>) {
-    return And(
-        options.isLaneEffectEnabled,
-        SpawnParticleEffect(
-            ParticleEffect.LaneLinear,
-            getLaneBottomLeft(lane),
-            laneBottom,
-            getLaneTopLeft(lane),
-            laneTop,
-            getLaneTopRight(lane),
-            laneTop,
-            getLaneBottomRight(lane),
-            laneBottom,
-            0.2,
-            false
-        )
+    return If(
+        Less(lane, 3),
+        And(
+            options.isLaneEffectEnabled,
+            SpawnParticleEffect(
+                ParticleEffect.LaneLinear,
+                getLaneBottomLeft(lane),
+                laneBottom,
+                getLaneTopLeft(lane),
+                laneTop,
+                getLaneTopRight(lane),
+                laneTop,
+                getLaneBottomRight(lane),
+                laneBottom,
+                0.2,
+                false
+            )
+        ),
+        And()
     )
 }
 

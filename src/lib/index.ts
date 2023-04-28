@@ -1,41 +1,39 @@
 import { EngineInfo, LevelData } from 'sonolus-core'
-import { ChartObject, fromBestdori as _fromBestdori } from './convert'
+import { ChartObject, fromHanipure as _fromHanipure } from './convert'
 import { Resource } from './Resource'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const archetypes = require('./archetypes')
 
-export const version = '0.7.1'
+export const version = '0.0.1'
 
 export const engineInfo = {
-    name: 'bandori',
+    name: 'hwpl',
     version: 7,
     title: {
-        en: 'BanG Dream!',
-        ja: 'バンドリ！',
-        ko: '뱅드림!',
-        zhs: 'BanG Dream!',
-        zht: 'BanG Dream!',
+        en: 'Hanipure',
+        ja: 'ハニプレ',
+        zhs: 'Hanipure',
+        zht: 'Hanipure',
     },
     subtitle: {
-        en: 'BanG Dream! Girls Band Party!',
-        ja: 'バンドリ！ ガールズバンドパーティ！',
-        ko: '뱅드림! 걸즈 밴드 파티!',
-        zhs: 'BanG Dream! 少女乐团派对!',
-        zht: 'BanG Dream! 少女樂團派對',
+        en: 'Honeyworks Premium Live',
+        ja: 'ハニプレ',
+        zhs: 'Honeyworks Premium Live',
+        zht: 'Honeyworks Premium Live',
     },
     author: {
-        en: 'Burrito',
+        en: 'LittleYang0531',
     },
     description: {
         en: [
-            'A recreation of BanG Dream! Girls Band Party engine in Sonolus.',
+            'A recreation of Honeyworks Premium Live engine in Sonolus.',
             '',
             'Version:',
             version,
             '',
             'GitHub Repository:',
-            'https://github.com/NonSpicyBurrito/sonolus-bandori-engine',
+            'https://github.com/LittleYang0531/sonolus-hwpl-engine',
         ].join('\n'),
     },
 } as const satisfies Partial<EngineInfo>
@@ -44,6 +42,6 @@ export const engineConfiguration = new Resource('EngineConfiguration')
 export const engineData = new Resource('EngineData')
 export const engineThumbnail = new Resource('thumbnail.png')
 
-export function fromBestdori(chart: ChartObject[]): LevelData {
-    return _fromBestdori(chart, archetypes)
+export function fromHanipure(chart: Array<Array<number>>): LevelData {
+    return _fromHanipure(chart, archetypes)
 }
