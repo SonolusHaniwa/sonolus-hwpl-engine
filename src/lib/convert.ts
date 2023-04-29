@@ -68,7 +68,7 @@ export function fromHanipure(chart: Array<Array<number>>, archetypes: {
     curvedSliderIndex: number
 }): LevelData {
     let convertChart: ChartObject[] = new Array;
-    convertChart.push({"type":"BPM","bpm":150,"beat":0});
+    convertChart.push({"type":"BPM","bpm":120,"beat":0});
     for (let i = 0; i < chart.length; i++) {
         let x: Array<number> = chart[i];
         if (x[0] == 1) {
