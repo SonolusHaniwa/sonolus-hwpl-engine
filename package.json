@@ -1,8 +1,8 @@
 {
-  "name": "hwpl",
+  "name": "sonolus-hwpl-engine",
   "title": "Hanipure",
   "subtitle": "Honeyworks Premium Live",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A recreation of Honeyworks Premium Live engine in Sonolus",
   "author": "LittleYang0531",
   "repository": "github:LittleYang0531/sonolus-hwpl-engine",
