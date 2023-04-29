@@ -139,7 +139,7 @@ export function fromHanipure(chart: Array<Array<number>>, archetypes: {
             } convertChart.push(xx);
         }
     }
-    console.log(convertChart)
+    // console.log(convertChart)
     return _fromBestdori(convertChart, archetypes)
 }
 
