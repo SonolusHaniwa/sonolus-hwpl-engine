@@ -1,6 +1,6 @@
 const int LevelMemoryId = 2000;
-const int LevelDataId = 2002;
-// const int LevelOptionId = 2;
+const int LevelDataId = 2001;
+const int LevelOptionId = 2002;
 // const int LevelTransformId = 3;
 // const int LevelBackgroundId = 4;
 // const int LevelUIId = 5;
@@ -61,6 +61,30 @@ class PointerArray {
     T operator [] (int offset) {return T(Multiply({offset, blockSize}));}
     T operator [] (FuncNode offset) {return T(Multiply({offset, blockSize}));};
 };
+
+Pointer<RuntimeEnvironmentId> RuntimeEnvironment;
+Pointer<RuntimeUpdateId> RuntimeUpdate;
+Pointer<RuntimeTouchArrayId> RuntimeTouch;
+Pointer<RuntimeSkinTransformId> RuntimeSkinTransform;
+Pointer<RuntimeParticleTransformId> RuntimeParticleTransform;
+Pointer<RuntimeBackgroundId> RuntimeBackground;
+Pointer<RuntimeUIId> RuntimeUI;
+Pointer<RuntimeUIConfigurationId> RuntimeUIConfiguration;
+Pointer<LevelMemoryId> LevelMemory;
+Pointer<LevelDataId> LevelData;
+Pointer<LevelOptionId> LevelOption;
+Pointer<LevelBucketId> LevelBucket;
+Pointer<LevelScoreId> LevelScore;
+Pointer<LevelLifeId> LevelLife;
+Pointer<EngineRomId> EngineRom;
+Pointer<EntityMemoryId> EntityMemory;
+Pointer<EntityDataArrayId> EntityData;
+Pointer<EntitySharedMemoryArrayId> EntitySharedMemory;
+Pointer<EntityInfoArrayId> EntityInfo;
+Pointer<EntityDespawnId> EntityDespawn;
+Pointer<EntityInputId> EntityInput;
+Pointer<ArchetypeLifeId> ArchetypeLife;
+Pointer<TemporaryMemoryId> TemporaryMemory;
 
 // #include"archetypeLife.h"
 // #include"engineRom.h"
