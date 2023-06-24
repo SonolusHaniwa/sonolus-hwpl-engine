@@ -82,40 +82,74 @@ Json::Value fromHanipure(Json::Value chart) {
 
 // <------ 配置集合 ------>
 
+const double maxSize = 1.2;               // 按键最大大小
 const string Scope = "hwpl";
 const string dist = "./dist";
-const double interfaceGap = 0.05;            // 组件间距
-const double targetAspectRadio = 1600 / 1200;// 目标屏幕宽高比
-const double lowPosition = 0.82;             // 舞台低位
-const double highPosition = 0.78125;		 // 舞台高位
+const var interfaceGap = 0.05;            // 组件间距
+const var targetAspectRadio = 1920.0 / 1080.0;// 目标屏幕宽高比
+const var lineNumber = 6;                 // 按键数
+const var highWidth = 0.1;                // 高位宽度与低位宽度比
+const var defaultAppearTime = 10.0;       // Note 默认出现时间
+const var stageMaxPercentage = 0.7;       // 舞台最大占比
+const var minSFXDistance = 0.02;          // 最小音效时间
 class stage {
 	public:
 
-	FuncNode w = If(
-		LevelOption.get(Option_LockAspectRadio) == 1 && screen.aspectRadio > targetAspectRadio,
-		((screen.h * highPosition) / lowPosition) * targetAspectRadio,
-		screen.w
+	const var w = If(
+		LevelOption.get(Option_LockAspectRadio),
+		If(
+			targetAspectRadio < screen.aspectRadio,
+			screen.h * stageMaxPercentage * targetAspectRadio,
+			screen.w * stageMaxPercentage
+	    ), screen.w * stageMaxPercentage
 	);
-	FuncNode h = If(
-		LevelOption.get(Option_LockAspectRadio) == 1,
+	const var h = If(
+		LevelOption.get(Option_LockAspectRadio),
 		If(
-			screen.aspectRadio > targetAspectRadio,
-			screen.h * highPosition,
-			screen.h / targetAspectRadio * lowPosition
-		),
-		If(
-			screen.aspectRadio > targetAspectRadio,
-			screen.h * highPosition,
-			screen.h * lowPosition
-		)
+			targetAspectRadio < screen.aspectRadio,
+			screen.h * stageMaxPercentage,
+			screen.w * stageMaxPercentage / targetAspectRadio
+		), screen.h * stageMaxPercentage
 	);
 }stage;
-const FuncNode t = If(
-	LevelOption.get(Option_LockAspectRadio) == 1 && screen.aspectRadio <= targetAspectRadio,
-	(screen.w / targetAspectRadio) * 0.5,
+const var t = If(
+	LevelOption.get(Option_LockAspectRadio) && screen.aspectRadio < targetAspectRadio,
+	screen.w / targetAspectRadio * 0.5,
 	screen.t
 );
-const FuncNode b = t - stage.h;
+const var b = t - stage.h;
+const var speed = stage.h / defaultAppearTime / 5.0 *LevelOption.get(Option_NotesSpeed);
+const var appearTimeLength = stage.h / speed;
+class line {
+	public:
+
+	int i = 0;
+	line(){}
+	line(int i):i(i){};
+	line operator [] (int i) {
+		return line(i);
+	}
+
+	const var highPosition = (i - lineNumber / 2.0 - 0.5) * highWidth * stage.w / lineNumber;
+	const var lowPosition = (i - lineNumber / 2.0 - 0.5) * stage.w / lineNumber;
+	var y(var t) {
+		return t / appearTimeLength * stage.h - stage.h / 2;
+	}
+	var x(var t) {
+		return Lerp(lowPosition, highPosition, t / appearTimeLength);
+	}
+	var width(var t) {
+		return Lerp(highWidth / lineNumber, 1.0 / lineNumber, t / appearTimeLength) * stage.w;
+	}
+}lines;
+const double noteSize = 128.0 / 1080.0;
+var clickBoxl = stage.w / (-2.0) - stage.w / lineNumber * (maxSize - 1.0) / 2.0;
+var clickBoxr = stage.w / 2.0 + stage.w / lineNumber * (maxSize - 1.0) / 2.0;
+var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
+var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+auto inClickBox = [](Touch touch){
+	return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
+};
 
 int main() {
     EngineData engineData;
@@ -149,11 +183,11 @@ int main() {
 	// 连击指标参数
 	FuncNode comboValueWidth = 0 * ui.comboConfiguration.scale;
 	FuncNode comboValueHeight = stage.h * 0.12 * ui.comboConfiguration.scale;
-	FuncNode comboValueX = stage.w * 0.35;
+	FuncNode comboValueX = stage.w * 0.4;
 	FuncNode comboValueY = Lerp(t, b, 0.5);
 	FuncNode comboTextWidth = 0 * ui.comboConfiguration.scale;
 	FuncNode comboTextHeight = stage.h * 0.05 * ui.comboConfiguration.scale;
-	FuncNode comboTextX = stage.w * 0.35;
+	FuncNode comboTextX = stage.w * 0.4;
 	FuncNode comboTextY = Lerp(t, b, 0.5);
 	EngineDataArchetype initialization = EngineDataArchetype(
 		"Initialization", false, {},
@@ -189,35 +223,49 @@ int main() {
 	class StageFunction {
 		public:
 
-		FuncNode drawStage() {
-			FuncNode l = -1 * stage.w / 2, r = stage.w / 2, t = stage.h / 2, b = -1 * stage.h / 2;
-			return Draw(Sprite_Stage, l, b, l, t, r, t, r, b, 1, 1);
+		var drawStage() {
+			var stagel = stage.w / -2, stager = stage.w / 2, staget = stage.h / 2, stageb = stage.h / -2;
+			var linel = screen.l, liner = screen.r, lineb = stageb - 20.0 / 1080.0, linet = stageb + 20.0 / 1080.0;
+			var drawFunc = Execute({
+				Draw(Sprite_Stage, stagel, stageb, stagel, staget, stager, staget, stager, stageb, 1, 1),
+				Draw(Sprite_JudgeLine, linel, lineb, linel, linet, liner, linet, liner, lineb, 2, 1)
+			});
+			for (int i = 1; i <= 6; i++) {
+				var notel = lines[i].lowPosition - noteSize / 2;
+				var notet = stageb + noteSize / 2;
+				var noter = lines[i].lowPosition + noteSize / 2;
+				var noteb = stageb - noteSize / 2;
+				drawFunc.args.push_back(Draw(Sprite_JudgeNote, notel, noteb, notel, notet, noter, notet, noter, noteb, 3, 1));
+			} return drawFunc;
 		}
 
-		FuncNode onEmptyTop() {
-			return Play(Effect_Stage, 0.85);
+		var onEmptyTop() {
+			return Play(Effect_Stage, minSFXDistance);
 		}
 	}StageFunction;
 	EngineDataArchetype stageArchetype = EngineDataArchetype(
 		"Stage", true, {},
 		Execute({}), 2, 1, Execute({}),
 		StageFunction.drawStage(), Execute({
-			/*If(
-				LevelOption.get(Option_Autoplay), 
+			If(
+				LevelOption.get(Option_Autoplay),
 				Execute({}),
 				Execute({
 					touchCounter.set(0),
 					While(
 						touchCounter.get() < touches.size,
-						If (
-							touches[touchCounter.get()].started &&
-							!isUsed(touches[touchCounter.get()]),
-							StageFunction.onEmptyTop(),
-							Execute({})
-						)
+						Execute({
+							If (
+								touches[touchCounter.get()].started &&
+								!isUsed(touches[touchCounter.get()]) &&
+								inClickBox(touches[touchCounter.get()]),
+								StageFunction.onEmptyTop(),
+								Execute({})
+							), touchCounter.add(1)
+						})
 					)
 				})
-			)*/
+			)
 		}), Execute({}), Execute({})
 	);
 
