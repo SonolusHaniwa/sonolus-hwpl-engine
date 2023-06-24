@@ -8,8 +8,8 @@ Current Process: Finished Stage Archetypes.
 
 ## Links 
   
-- [Sonolus Website](https://sonolus.com) 
-- [Sonolus Wiki](https://github.com/NonSpicyBurrito/sonolus-wiki)
+- [Sonolus Website](https://sonolus.com) 
+- [Sonolus Wiki](https://github.com/NonSpicyBurrito/sonolus-wiki)
 - [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h)
 
 ## Installation
