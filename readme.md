@@ -6,8 +6,8 @@ Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) to develop.
 
 Current Process: Finished Stage Archetypes.
 
-## Links 
-  
+## Links
+
 - [Sonolus Website](https://sonolus.com) 
 - [Sonolus Wiki](https://github.com/NonSpicyBurrito/sonolus-wiki)
 - [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h)
