@@ -71,12 +71,13 @@ class EngineDataArchetypeCallback {
     FuncNode script = -1;
 
     EngineDataArchetypeCallback(){}
-    EngineDataArchetypeCallback(double index, double order = 0): index(index), order(order){};
+    EngineDataArchetypeCallback(double index, double order): index(index), order(order){};
     EngineDataArchetypeCallback(Json::Value arr){
         if (arr.isNull() == true) return;
         index = arr["index"].asInt(), order = arr["order"].asInt();
     }
     EngineDataArchetypeCallback(FuncNode script):script(script){}
+	EngineDataArchetypeCallback(double value):script(FuncNode(value)){}
 
     Json::Value toJsonObject() {
         Json::Value res;

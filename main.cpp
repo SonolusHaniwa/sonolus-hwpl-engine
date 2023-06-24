@@ -85,7 +85,7 @@ Json::Value fromHanipure(Json::Value chart) {
 const string Scope = "hwpl";
 const string dist = "./dist";
 const double interfaceGap = 0.05;            // 组件间距
-const double targetAspectRadio = 1334 / 750; // 目标屏幕宽高比
+const double targetAspectRadio = 1600 / 1200;// 目标屏幕宽高比
 const double lowPosition = 0.82;             // 舞台低位
 const double highPosition = 0.78125;		 // 舞台高位
 class stage {
@@ -165,7 +165,7 @@ int main() {
 			ui.secondaryMetricValue.set(secondaryMetricValueX, secondaryMetricValueY, 1, 1, secondaryMetricValueWidth, secondaryMetricValueHeight, 0, ui.secondaryMetricConfiguration.alpha, HorizontalAlign.Right, false),
 			ui.comboValue.set(comboValueX, comboValueY, 0.5, 0.5, comboValueWidth, comboValueHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false),
 			ui.comboText.set(comboTextX, comboTextY, 0.5, 2.75, comboTextWidth, comboTextHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false)
-		}), 0, 1, {}, 
+		}), 0, 1, Execute({}), 
 		Execute({
 			EntityDespawn.set(0, true),
 		}), Execute({}), Execute({}), Execute({})
@@ -198,11 +198,11 @@ int main() {
 			return Play(Effect_Stage, 0.85);
 		}
 	}StageFunction;
-	EngineDataArchetype stage = EngineDataArchetype(
+	EngineDataArchetype stageArchetype = EngineDataArchetype(
 		"Stage", true, {},
-		Execute({}), 2, 1, StageFunction.drawStage(), 
+		Execute({}), 2, 1, Execute({}),
 		StageFunction.drawStage(), Execute({
-			If(
+			/*If(
 				LevelOption.get(Option_Autoplay), 
 				Execute({}),
 				Execute({
@@ -217,7 +217,7 @@ int main() {
 						)
 					)
 				})
-			)
+			)*/
 		}), Execute({}), Execute({})
 	);
 
@@ -228,7 +228,7 @@ int main() {
 			EngineConfigurationSliderOption("Notes Speed", 5, 1, 50, 0.1, false, Scope),
 			EngineConfigurationSliderOption("Notes Size", 1, 0.8, 1.2, 0.05, false, Scope, "#PERCENTAGE"),
 			EngineConfigurationToggleOption("Sync Line", 1, false, Scope),
-			EngineConfigurationToggleOption("Lock Aspect Radio", 0, false, Scope)
+			EngineConfigurationToggleOption("Lock Aspect Radio", 1, false, Scope)
 		}, EngineConfigurationUI(
 			arcade, life,
 			EngineConfigurationVisibility(1, 1),
@@ -268,7 +268,8 @@ int main() {
 		}, {
 			// Archetypes
 			initialization,
-			inputManager
+			inputManager,
+			stageArchetype
 		}, {}
 	);
 
