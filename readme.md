@@ -4,7 +4,17 @@ A recreation of Honeyworks Premium Live engine in [Sonolus](https://sono
 
 Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) to develop.
 
-Current Process: Finished Stage Archetypes.
+Todo List:
+
+- [x] Finished Chart Converter
+- [x] Finished Initialization Archetype
+- [x] Finished Input Manager Archetype
+- [x] Finished Stage Archetype
+- [ ] Finished Note && Hold Note Archetype
+- [ ] Finished Flick Archetype
+- [ ] Finished Hold Line Archetype
+- [ ] Finished Hold End & Hold Flick End Archetype
+- [ ] Finished Sync Line Archetype
 
 ## Links
 
