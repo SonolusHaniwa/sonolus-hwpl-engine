@@ -20,6 +20,7 @@ string readFile(string path) {
 enum OptionType {
 	Option_Autoplay,
 	Option_StrictJudge,
+	Option_Mirror,
 	Option_NotesSpeed,
 	Option_NotesSize,
 	Option_SyncLine,
@@ -198,7 +199,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 
 // <------ 配置集合 ------>
 
-const double maxSize = 1.2;               // 按键最大大小
+const double maxSize = 1.5;               // 按键最大大小
 const string Scope = "hwpl";              // 引擎标识符
 const string dist = "./dist";             // 资源文件输出地址
 const var interfaceGap = 0.05;            // 组件间距
@@ -260,12 +261,33 @@ class line {
 	var width(var t) {
 		return Lerp(highWidth / lineNumber, 1.0 / lineNumber, 1 - (y(t) + stage.h / 2) / stage.h) * stage.w * LevelOption.get(Option_NotesSize) * 0.6;
 	}
+	var inClickBox(Touch touch){
+		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxr = lowPosition + stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
+		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+		return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
+	};
 }lines;
 const double noteSize = 128.0 / 1080.0;
 var clickBoxl = stage.w / (-2.0) - stage.w / lineNumber * (maxSize - 1.0) / 2.0;
 var clickBoxr = stage.w / 2.0 + stage.w / lineNumber * (maxSize - 1.0) / 2.0;
 var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
 var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+class judgment {
+	public:
+
+	var perfect = 0.05;
+	var great = 0.10;
+	var good = 0.15;
+}judgment;
+class score {
+	public:
+
+	var perfect = 1;
+	var great = 0.75;
+	var good = 0.5;
+}score;
 auto inClickBox = [](Touch touch){
 	return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
 };
@@ -329,7 +351,10 @@ int main() {
 			ui.secondaryMetricBar.set(secondaryMetricBarX, secondaryMetricBarY, 1, 1, secondaryMetricBarWidth, secondaryMetricBarHeight, 0, ui.secondaryMetricConfiguration.alpha, HorizontalAlign.Left, true),
 			ui.secondaryMetricValue.set(secondaryMetricValueX, secondaryMetricValueY, 1, 1, secondaryMetricValueWidth, secondaryMetricValueHeight, 0, ui.secondaryMetricConfiguration.alpha, HorizontalAlign.Right, false),
 			ui.comboValue.set(comboValueX, comboValueY, 0.5, 0.5, comboValueWidth, comboValueHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false),
-			ui.comboText.set(comboTextX, comboTextY, 0.5, 2.75, comboTextWidth, comboTextHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false)
+			ui.comboText.set(comboTextX, comboTextY, 0.5, 2.75, comboTextWidth, comboTextHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false),
+			LevelScore.set(0, score.perfect),
+			LevelScore.set(1, score.great),
+			LevelScore.set(2, score.good)
 		}), 0, 1, Execute({}), 
 		Execute({
 			EntityDespawn.set(0, true),
@@ -340,9 +365,9 @@ int main() {
 
 	Array<LevelMemoryId> usedTouchIds = Array<LevelMemoryId>(16);
 	auto isUsed = [&](Touch touch){return usedTouchIds.has(touch.id);};
-	auto markAsUsed = [&](Touch touch){usedTouchIds.add(touch.id);};
+	auto markAsUsed = [&](Touch touch){return usedTouchIds.add(touch.id);};
 	EngineDataArchetype inputManager = EngineDataArchetype(
-		"Hanipure Input Manager", true, {},
+		"Hanipure Input Manager", false, {},
 		Execute({}), 1, EntityInfoArray.get(2) == EntityState.Despawned, 
 		Execute({}), Execute({}), Execute({
 			usedTouchIds.clear()
@@ -375,10 +400,10 @@ int main() {
 		}
 	}StageFunction;
 	EngineDataArchetype stageArchetype = EngineDataArchetype(
-		"Hanipure Stage", true, {},
+		"Hanipure Stage", false, {},
 		Execute({}), 2, 1, Execute({}),
 		StageFunction.drawStage(), Execute({
-			If(
+			If(				
 				LevelOption.get(Option_Autoplay),
 				Execute({}),
 				Execute({
@@ -390,7 +415,10 @@ int main() {
 								touches[touchCounter.get()].started &&
 								!isUsed(touches[touchCounter.get()]) &&
 								inClickBox(touches[touchCounter.get()]),
-								StageFunction.onEmptyTop(),
+								Execute({
+									StageFunction.onEmptyTop(),
+									markAsUsed(touches[touchCounter.get()])
+								}),
 								Execute({})
 							), touchCounter.add(1)
 						})
@@ -400,25 +428,74 @@ int main() {
 		}), Execute({}), Execute({})
 	);
 	
+	// 	<------- 普通按键模块 ------>
+	
 	class NoteFunction {
 		public:
 
-		var x = lines[EntityData.get(1)].x(RuntimeUpdate.get(0) - EntityData.get(0));
-		var y = lines[EntityData.get(1)].y(RuntimeUpdate.get(0) - EntityData.get(0));
-		var w = lines[EntityData.get(1)].width(RuntimeUpdate.get(0) - EntityData.get(0));
+		var x = lines[EntityData.get(1)].x(RuntimeUpdate.get(0) - EntityData.get(0) + appearTimeLength);
+		var y = lines[EntityData.get(1)].y(RuntimeUpdate.get(0) - EntityData.get(0) + appearTimeLength);
+		var w = lines[EntityData.get(1)].width(RuntimeUpdate.get(0) - EntityData.get(0) + appearTimeLength);
 		var l = x - w, r = x + w;
 		var t = y + w, b = y - w;
+		Variable<EntityMemoryId> isHighlighted;
+		Variable<EntityMemoryId> touchCounter;
 	}NoteFunction;
 	EngineDataArchetype noteArchetype = EngineDataArchetype(
 		"Hanipure Normal Note", true, {{"beat", 0}, {"lane", 1}},
-		Execute({}), 1000 + EntityData.get(0), RuntimeUpdate.get(0) >= EntityData.get(0), 
-		Execute({}), Execute({
+		Execute({}), 1000 + EntityData.get(0), RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength, 
+		Execute({
+			NoteFunction.isHighlighted.set(If(
+				RandomInteger(1, 4) == 1,
+				1, 
+				0
+			))
+		}), Execute({
 			If(
-				RandomInteger(1, 3) == 3,
+				NoteFunction.isHighlighted.get(),
 				Draw(Sprite_HighlightedNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
 				Draw(Sprite_NormalNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
 			)
-		}), Execute({}), Execute({}), Execute({})
+		}), Execute({
+			If(
+				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
+				Execute({}),	
+				Execute({
+					If(
+						LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityData.get(0) - judgment.good,
+						Execute({}),
+						Execute({
+							NoteFunction.touchCounter.set(0),
+							While(
+								NoteFunction.touchCounter.get() < touches.size,
+								Execute({
+									If(
+										touches[NoteFunction.touchCounter.get()].started && 
+										!isUsed(touches[NoteFunction.touchCounter.get()].id) &&
+										lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
+										Execute({
+											markAsUsed(touches[NoteFunction.touchCounter.get()]),
+											EntityInput.set(0, JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good)),
+											EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+											EntityDespawn.set(0, 1)
+										}), Execute({})
+									),
+									NoteFunction.touchCounter.add(1),
+								})
+							)
+						})
+					)
+				})
+			)
+		}), Execute({
+			If(
+				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good && entityInfo.state == EntityState.Active,
+				Execute({
+					EntityInput.set(0, 0),
+					EntityDespawn.set(0, 1)
+				}), Execute({})
+			)
+		}), Execute({})
 	);
 
 	// <------ 引擎配置 ------>
@@ -427,6 +504,7 @@ int main() {
 		{
 			EngineConfigurationToggleOption("Autoplay", 0, true, Scope),
 			EngineConfigurationToggleOption("Strict Judge", 0, true, Scope),
+			EngineConfigurationToggleOption("Mirror", 0, false, Scope),
 			EngineConfigurationSliderOption("Notes Speed", 5, 1, 50, 0.1, false, Scope),
 			EngineConfigurationSliderOption("Notes Size", 1, 0.8, 1.2, 0.05, false, Scope, "#PERCENTAGE"),
 			EngineConfigurationToggleOption("Sync Line", 1, false, Scope),
