@@ -78,9 +78,12 @@ Pointer<LevelScoreId> LevelScore;
 Pointer<LevelLifeId> LevelLife;
 Pointer<EngineRomId> EngineRom;
 Pointer<EntityMemoryId> EntityMemory;
-Pointer<EntityDataArrayId> EntityData;
-Pointer<EntitySharedMemoryArrayId> EntitySharedMemory;
-Pointer<EntityInfoArrayId> EntityInfo;
+Pointer<EntityDataArrayId> EntityDataArray;
+Pointer<EntityDataId> EntityData;
+Pointer<EntitySharedMemoryArrayId> EntitySharedMemoryArray;
+Pointer<EntitySharedMemoryId> EntitySharedMemory;
+Pointer<EntityInfoArrayId> EntityInfoArray;
+Pointer<EntityInfoId> EntityInfo;
 Pointer<EntityDespawnId> EntityDespawn;
 Pointer<EntityInputId> EntityInput;
 Pointer<ArchetypeLifeId> ArchetypeLife;
@@ -185,21 +188,9 @@ class ui {
 class entityInfo {
     public:
 
-    class info {
-        public:
-
-        FuncNode offset;
-        info(){}
-        info(FuncNode offset):offset(offset){};
-
-        FuncNode id = EntityInfo.get(offset * 3 + 0);
-        FuncNode archetype = EntityInfo.get(offset * 3 + 1);
-        FuncNode state = EntityInfo.get(offset * 3 + 2);
-    };
-
-    info operator [] (FuncNode offset) {
-        return info(offset);
-    }
+    FuncNode id = EntityInfo.get(0);
+    FuncNode archetype = EntityInfo.get(1);
+    FuncNode state = EntityInfo.get(2);
 }entityInfo;
 
 class Touch {

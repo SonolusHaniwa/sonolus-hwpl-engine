@@ -68,7 +68,7 @@ enum ParticleType {
 };
 
 // <------ 谱面转换 ------>
-//
+
 struct Note {
 	NoteType type;
 	double clickTime;
@@ -205,7 +205,7 @@ const var interfaceGap = 0.05;            // 组件间距
 const var targetAspectRadio = 1920.0 / 1080.0; // 目标屏幕宽高比
 const var lineNumber = 6;                 // 按键数
 const var highWidth = 0.1;                // 高位宽度与低位宽度比
-const var defaultAppearTime = 10.0;       // Note 默认出现时间
+const var defaultAppearTime = 5.0;        // Note 默认出现时间
 const var stageMaxPercentage = 0.7;       // 舞台最大占比
 const var minSFXDistance = 0.02;          // 最小音效时间
 class stage {
@@ -234,28 +234,31 @@ const var t = If(
 	screen.t
 );
 const var b = t - stage.h;
-const var speed = stage.h / defaultAppearTime / 5.0 *LevelOption.get(Option_NotesSpeed);
+const var speed = stage.h / defaultAppearTime / 5.0 * LevelOption.get(Option_NotesSpeed);
 const var appearTimeLength = stage.h / speed;
 class line {
 	public:
 
-	int i = 0;
+	var i = 0;
 	line(){}
-	line(int i):i(i){};
-	line operator [] (int i) {
+	line(var i):i(i){};
+	line operator [] (var i) {
 		return line(i);
+	}
+	var EaseVal(var t) {
+		return Ease(t, RuntimeFunction_EaseOutQuad);
 	}
 
 	const var highPosition = (i - lineNumber / 2.0 - 0.5) * highWidth * stage.w / lineNumber;
 	const var lowPosition = (i - lineNumber / 2.0 - 0.5) * stage.w / lineNumber;
 	var y(var t) {
-		return t / appearTimeLength * stage.h - stage.h / 2;
+		return EaseVal(1 - t / appearTimeLength) * stage.h - stage.h / 2;
 	}
 	var x(var t) {
-		return Lerp(lowPosition, highPosition, t / appearTimeLength);
+		return Lerp(lowPosition, highPosition, EaseVal(1 - t / appearTimeLength));
 	}
 	var width(var t) {
-		return Lerp(highWidth / lineNumber, 1.0 / lineNumber, t / appearTimeLength) * stage.w;
+		return Lerp(highWidth / lineNumber, 1.0 / lineNumber, 1 - (y(t) + stage.h / 2) / stage.h) * stage.w * LevelOption.get(Option_NotesSize) * 0.6;
 	}
 }lines;
 const double noteSize = 128.0 / 1080.0;
@@ -340,7 +343,7 @@ int main() {
 	auto markAsUsed = [&](Touch touch){usedTouchIds.add(touch.id);};
 	EngineDataArchetype inputManager = EngineDataArchetype(
 		"Hanipure Input Manager", true, {},
-		Execute({}), 1, entityInfo[0].state == EntityState.Despawned, 
+		Execute({}), 1, EntityInfoArray.get(2) == EntityState.Despawned, 
 		Execute({}), Execute({}), Execute({
 			usedTouchIds.clear()
 		}), Execute({}), Execute({})
@@ -396,7 +399,30 @@ int main() {
 			)
 		}), Execute({}), Execute({})
 	);
+	
+	class NoteFunction {
+		public:
 
+		var x = lines[EntityData.get(1)].x(RuntimeUpdate.get(0) - EntityData.get(0));
+		var y = lines[EntityData.get(1)].y(RuntimeUpdate.get(0) - EntityData.get(0));
+		var w = lines[EntityData.get(1)].width(RuntimeUpdate.get(0) - EntityData.get(0));
+		var l = x - w, r = x + w;
+		var t = y + w, b = y - w;
+	}NoteFunction;
+	EngineDataArchetype noteArchetype = EngineDataArchetype(
+		"Hanipure Normal Note", true, {{"beat", 0}, {"lane", 1}},
+		Execute({}), 1000 + EntityData.get(0), RuntimeUpdate.get(0) >= EntityData.get(0), 
+		Execute({}), Execute({
+			If(
+				RandomInteger(1, 3) == 3,
+				Draw(Sprite_HighlightedNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
+				Draw(Sprite_NormalNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+			)
+		}), Execute({}), Execute({}), Execute({})
+	);
+
+	// <------ 引擎配置 ------>
+	
 	engineConfiguration = EngineConfiguration(
 		{
 			EngineConfigurationToggleOption("Autoplay", 0, true, Scope),
@@ -445,7 +471,8 @@ int main() {
 			// Archetypes
 			initialization,
 			inputManager,
-			stageArchetype
+			stageArchetype,
+			noteArchetype
 		}, {}
 	);
 
