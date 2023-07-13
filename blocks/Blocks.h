@@ -229,24 +229,30 @@ class Array {
 
     int offset;
     int capacity;
-    int size = 0;
+	FuncNode size = Get(identifierId, 0);
+	int sizeOffset = 0;
 
     Array(){}
     Array(int capacity):capacity(capacity){
-        offset = allocatorSize[identifierId];
-        allocatorSize[identifierId] += capacity;
+		sizeOffset = allocatorSize[identifierId];
+		size = Get(identifierId, sizeOffset);
+        offset = allocatorSize[identifierId] + 1;
+        allocatorSize[identifierId] += capacity + 1;
     };
-    FuncNode operator [] (int id) {
-        if (id >= size) runtime_error("StorageArray: index out of range");
+    FuncNode operator [] (FuncNode id) {
         return Get(identifierId, Add({id, offset}));
     }
     FuncNode add(FuncNode value) {
-        if (size == capacity) runtime_error("StorageArray: array is full");
-        return Set(identifierId, Add({size++, offset}), value);
-    }
+        return Execute({
+			Set(identifierId, Add({size, offset}), value),
+			// Debuglog(Get(identifierId, Add({size, offset}))),
+			Set(identifierId, sizeOffset, Add({size, 1})),
+			// Debuglog(value)
+		});
+	}
     FuncNode has(FuncNode value) {
-        FuncNode res = false;
-        for (int i = size - 1; i >= 0; i--) {
+		FuncNode res = false;
+        for (int i = capacity - 1; i >= 0; i--) {
             res = If(
                 Get(identifierId, Add({i, offset})) == value,
                 true,
@@ -256,7 +262,7 @@ class Array {
     }
     FuncNode indexOf(FuncNode value) {
         FuncNode res = -1;
-        for (int i = size - 1; i >= 0; i--) {
+        for (int i = capacity - 1; i >= 0; i--) {
             res = If(
                 Get(identifierId, Add({i, offset})) == value,
                 i,
@@ -265,7 +271,7 @@ class Array {
         } return res;
     }
     FuncNode clear() {
-        size = 0; FuncNode res = Execute({});
+        FuncNode res = Execute({Set(identifierId, sizeOffset, 0)});
         for (int i = 0; i < capacity; i++) res.args.push_back(Set(identifierId, Add({i, offset}), 0));
         return res;
     }

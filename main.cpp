@@ -199,7 +199,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 
 // <------ 配置集合 ------>
 
-const double maxSize = 1.5;               // 按键最大大小
+const double maxSize = 2;               // 按键最大大小
 const string Scope = "hwpl";              // 引擎标识符
 const string dist = "./dist";             // 资源文件输出地址
 const var interfaceGap = 0.05;            // 组件间距
@@ -292,21 +292,23 @@ auto inClickBox = [](Touch touch){
 	return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
 };
 
-int main() {
+int main(int argc, char** argv) {
     EngineData engineData;
     EngineConfiguration engineConfiguration;
 
 	// <------ 谱面转换测试 ------>
 	
-	Json::Value chart;
-	string chartJson = readFile("./LevelData.json");
-	json_decode(chartJson, chart);
-	Json::Value LevelData = fromHanipure(chart);
-	string dataJson = json_encode(LevelData);
-	buffer data = compress_gzip(dataJson, 9);
-	ofstream preFout((dist + "/LevelData").c_str());
-	for (int i = 0; i < data.size(); i++) preFout << data.v[i];
-	preFout.close();
+	if (argc >= 3) {
+		Json::Value chart;
+		string chartJson = readFile(argv[1]);
+		json_decode(chartJson, chart);
+		Json::Value LevelData = fromHanipure(chart);
+		string dataJson = json_encode(LevelData);
+		buffer data = compress_gzip(dataJson, 9);
+		ofstream preFout(argv[2]);
+		for (int i = 0; i < data.size(); i++) preFout << data.v[i];
+		preFout.close();
+	}
 
     // <------ 初始化开始 ------>
 
@@ -364,8 +366,8 @@ int main() {
 	// <------ 输入管理器模块 ------>
 
 	Array<LevelMemoryId> usedTouchIds = Array<LevelMemoryId>(16);
-	auto isUsed = [&](Touch touch){return usedTouchIds.has(touch.id);};
-	auto markAsUsed = [&](Touch touch){return usedTouchIds.add(touch.id);};
+	auto isUsed = [&](Touch touch){return Execute({usedTouchIds.has(touch.id)});};
+	auto markAsUsed = [&](Touch touch){return Execute({usedTouchIds.add(touch.id)});};
 	EngineDataArchetype inputManager = EngineDataArchetype(
 		"Hanipure Input Manager", false, {},
 		Execute({}), 1, EntityInfoArray.get(2) == EntityState.Despawned, 
@@ -427,6 +429,7 @@ int main() {
 			)
 		}), Execute({}), Execute({})
 	);
+	stageArchetype.touch.order = 1000;
 	
 	// 	<------- 普通按键模块 ------>
 	
@@ -455,6 +458,14 @@ int main() {
 				NoteFunction.isHighlighted.get(),
 				Draw(Sprite_HighlightedNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
 				Draw(Sprite_NormalNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+			), If(
+				LevelOption.get(Option_Autoplay) && RuntimeUpdate.get(0) >= EntityData.get(0),
+				Execute({
+					EntityInput.set(0, 1),
+					EntityInput.set(1, 0),
+					Play(Effect_Perfect, minSFXDistance),
+					EntityDespawn.set(0, 1)
+				}), Execute({})
 			)
 		}), Execute({
 			If(
@@ -471,12 +482,27 @@ int main() {
 								Execute({
 									If(
 										touches[NoteFunction.touchCounter.get()].started && 
-										!isUsed(touches[NoteFunction.touchCounter.get()].id) &&
+										!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 										lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
 										Execute({
 											markAsUsed(touches[NoteFunction.touchCounter.get()]),
-											EntityInput.set(0, JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good)),
 											EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+											Switch(
+												JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
+													{1, Execute({
+														EntityInput.set(0, 1),
+														Play(Effect_Perfect, minSFXDistance)
+													})}, {2, Execute({
+														EntityInput.set(0, 2),
+														Play(Effect_Great, minSFXDistance)
+													})}, {3, Execute({
+														EntityInput.set(0, 3),
+														Play(Effect_Good, minSFXDistance)
+													})}, {0, Execute({
+														EntityInput.set(0, 0)
+													})}
+												}
+											),
 											EntityDespawn.set(0, 1)
 										}), Execute({})
 									),
@@ -506,7 +532,7 @@ int main() {
 			EngineConfigurationToggleOption("Strict Judge", 0, true, Scope),
 			EngineConfigurationToggleOption("Mirror", 0, false, Scope),
 			EngineConfigurationSliderOption("Notes Speed", 5, 1, 50, 0.1, false, Scope),
-			EngineConfigurationSliderOption("Notes Size", 1, 0.8, 1.2, 0.05, false, Scope, "#PERCENTAGE"),
+			EngineConfigurationSliderOption("Notes Size", 1, 0.5, 2.0, 0.1, false, Scope, "#PERCENTAGE"),
 			EngineConfigurationToggleOption("Sync Line", 1, false, Scope),
 			EngineConfigurationToggleOption("Lock Aspect Radio", 1, false, Scope)
 		}, EngineConfigurationUI(
