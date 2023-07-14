@@ -1,3 +1,5 @@
+// 1022013
+
 #include<bits/stdc++.h>
 #include"sonolus.h"
 using namespace std;
@@ -24,7 +26,8 @@ enum OptionType {
 	Option_NotesSpeed,
 	Option_NotesSize,
 	Option_SyncLine,
-	Option_LockAspectRadio
+	Option_LockAspectRadio,
+	Option_Stage
 };
 
 enum NoteType {
@@ -385,8 +388,11 @@ int main(int argc, char** argv) {
 			var stagel = stage.w / -2, stager = stage.w / 2, staget = stage.h / 2, stageb = stage.h / -2;
 			var linel = screen.l, liner = screen.r, lineb = stageb - 20.0 / 1080.0, linet = stageb + 20.0 / 1080.0;
 			var drawFunc = Execute({
-				Draw(Sprite_Stage, stagel, stageb, stagel, staget, stager, staget, stager, stageb, 1, 1),
-				Draw(Sprite_JudgeLine, linel, lineb, linel, linet, liner, linet, liner, lineb, 2, 1)
+				If(
+					LevelOption.get(Option_Stage),
+					Draw(Sprite_Stage, stagel, stageb, stagel, staget, stager, staget, stager, stageb, 1, 1),
+					Execute({})
+				), Draw(Sprite_JudgeLine, linel, lineb, linel, linet, liner, linet, liner, lineb, 2, 1)
 			});
 			for (int i = 1; i <= 6; i++) {
 				var notel = lines[i].lowPosition - noteSize / 2;
@@ -443,6 +449,7 @@ int main(int argc, char** argv) {
 		var t = y + w, b = y - w;
 		Variable<EntityMemoryId> isHighlighted;
 		Variable<EntityMemoryId> touchCounter;
+		Variable<EntityMemoryId> playLoopedId;
 	}NoteFunction;
 	EngineDataArchetype noteArchetype = EngineDataArchetype(
 		"Hanipure Normal Note", true, {{"beat", 0}, {"lane", 1}},
@@ -524,6 +531,143 @@ int main(int argc, char** argv) {
 		}), Execute({})
 	);
 
+	// <------ Flick 模块 ------>
+
+	EngineDataArchetype flickArchetype = noteArchetype;
+	flickArchetype.name = "Hanipure Normal Flick";
+	flickArchetype.updateSequential = Execute({
+		If(
+			NoteFunction.isHighlighted.get(),
+			Draw(Sprite_HighlightedFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
+			Draw(Sprite_NormalFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+		), If(
+			LevelOption.get(Option_Autoplay) && RuntimeUpdate.get(0) >= EntityData.get(0),
+			Execute({
+				EntityInput.set(0, 1),
+				EntityInput.set(1, 0),
+				Play(Effect_Flick, minSFXDistance),
+				EntityDespawn.set(0, 1)
+			}), Execute({})
+		)
+	});
+
+	// <------ HoldStart 模块 ------>
+	
+	EngineDataArchetype holdStartArchetype = noteArchetype;
+	holdStartArchetype.name = "Hanipure Normal Hold";
+	holdStartArchetype.updateSequential = Execute({
+		If(
+			NoteFunction.isHighlighted.get(),
+			Draw(Sprite_HighlightedHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
+			Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+		), If(
+			LevelOption.get(Option_Autoplay) && RuntimeUpdate.get(0) >= EntityData.get(0),
+			Execute({
+				EntityInput.set(0, 1),
+				EntityInput.set(1, 0),
+				Play(Effect_Perfect, minSFXDistance),
+				EntityDespawn.set(0, 1)
+			}), Execute({})
+		)
+	});
+
+	// <------ HoldEnd 模块 ------>
+	
+	EngineDataArchetype holdEndArchetype = noteArchetype;
+	holdEndArchetype.name = "Hanipure Hold End";
+	holdEndArchetype.updateSequential = Execute({
+		Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+			LevelOption.get(Option_Autoplay),
+			Execute({
+				If(
+					RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
+					RuntimeUpdate.get(0) >= EntityData.get(0),
+					Execute({
+						EntityInput.set(0, 1),
+						EntityInput.set(1, 0),
+						StopLooped(NoteFunction.playLoopedId.get()),
+						Play(Effect_Perfect, minSFXDistance),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				)
+			}), Execute({})
+		)
+	});
+	holdEndArchetype.data.push_back({"last", 2});
+
+	// <------ HoldFlickEnd 模块 ------>
+	
+	EngineDataArchetype holdFlickEndArchetype = noteArchetype;
+	holdFlickEndArchetype.name = "Hanipure Hold Flick End";
+	holdFlickEndArchetype.updateSequential = Execute({
+		Draw(Sprite_NormalFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+			LevelOption.get(Option_Autoplay),
+			Execute({
+				If(
+					RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
+					RuntimeUpdate.get(0) >= EntityData.get(0),
+					Execute({
+						EntityInput.set(0, 1),
+						EntityInput.set(1, 0),
+						StopLooped(NoteFunction.playLoopedId.get()),
+						Play(Effect_Flick, minSFXDistance),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				)
+			}), Execute({})
+		)																																																																																									
+	});
+	holdFlickEndArchetype.data.push_back({"last", 2});
+
+	// <------ HoldLine 模块 ------>
+	
+	EngineDataArchetype holdLineArchetype = noteArchetype;
+	holdLineArchetype.name = "Hanipure Hold Line";
+	holdLineArchetype.updateSequential = Execute({
+		Draw(Sprite_HoldLine, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+			LevelOption.get(Option_Autoplay),
+			Execute({
+				If(
+					RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
+					RuntimeUpdate.get(0) >= EntityData.get(0),
+					Execute({
+						EntityInput.set(0, 1),
+						EntityInput.set(1, 0),
+						StopLooped(NoteFunction.playLoopedId.get()),
+						Play(Effect_Perfect, minSFXDistance),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				)
+			}), Execute({})
+		)
+	});
+	holdLineArchetype.data.push_back({"last", 2});
+
+	// <------ 同步线模块 ------>
+	
+	EngineDataArchetype syncLine = noteArchetype;
+	syncLine.name = "Hanipure Sync Line";
+	syncLine.data = {{"beat", 0}, {"minLane", 1}, {"maxLine", 2}};
+	syncLine.hasInput = false;
+	syncLine.updateSequential = Execute({
+//		Draw(Sprite_JudgeLine, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+	});
+
 	// <------ 引擎配置 ------>
 	
 	engineConfiguration = EngineConfiguration(
@@ -534,7 +678,8 @@ int main(int argc, char** argv) {
 			EngineConfigurationSliderOption("Notes Speed", 5, 1, 50, 0.1, false, Scope),
 			EngineConfigurationSliderOption("Notes Size", 1, 0.5, 2.0, 0.1, false, Scope, "#PERCENTAGE"),
 			EngineConfigurationToggleOption("Sync Line", 1, false, Scope),
-			EngineConfigurationToggleOption("Lock Aspect Radio", 1, false, Scope)
+			EngineConfigurationToggleOption("Lock Aspect Radio", 1, false, Scope),
+			EngineConfigurationToggleOption("Stage", 1, false, Scope)
 		}, EngineConfigurationUI(
 			arcade, life,
 			EngineConfigurationVisibility(1, 1),
@@ -557,7 +702,7 @@ int main(int argc, char** argv) {
 			{"Hanipure Highlighted Flick", Sprite_HighlightedFlick},
 			{"Hanipure Normal Hold", Sprite_NormalHold},
 			{"Hanipure Highlighted Hold", Sprite_HighlightedHold},
-			{"Hanipure Hold Note", Sprite_HoldLine},
+			{"Hanipure Hold Line", Sprite_HoldLine},
 			{"Hanipure Judge Note", Sprite_JudgeNote},
 			{"Hanipure Hold Body", Sprite_HoldBody}
 		}, {
@@ -576,7 +721,13 @@ int main(int argc, char** argv) {
 			initialization,
 			inputManager,
 			stageArchetype,
-			noteArchetype
+			noteArchetype,
+			flickArchetype,
+			holdStartArchetype,
+			holdEndArchetype,
+			holdFlickEndArchetype,
+			holdLineArchetype,
+			syncLine
 		}, {}
 	);
 
