@@ -202,7 +202,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 
 // <------ 配置集合 ------>
 
-const double maxSize = 2;               // 按键最大大小
+const double maxSize = 2;                 // 按键最大大小
 const string Scope = "hwpl";              // 引擎标识符
 const string dist = "./dist";             // 资源文件输出地址
 const var interfaceGap = 0.05;            // 组件间距
@@ -571,12 +571,34 @@ int main(int argc, char** argv) {
 		)
 	});
 
+	auto DrawHoldBody = [&](){
+		var lastId = EntityData.get(2);
+		var lastBeat = EntityDataArray.get(lastId * 32);
+		var lastLine = EntityDataArray.get(lastId * 32 + 1);
+		var timeNow = RuntimeUpdate.get(0);
+		var lastTime = timeNow - lastBeat + appearTimeLength;
+		var lastX = lines[lastLine].x(lastTime);
+		var lastY = lines[lastLine].y(lastTime);
+		var lastW = lines[lastLine].width(lastTime) * 0.8;
+		var thisTime = timeNow - EntityData.get(0) + appearTimeLength;
+		var thisLine = EntityData.get(1);
+		var thisX = lines[thisLine].x(thisTime);
+		var thisY = lines[thisLine].y(thisTime);
+		var thisW = lines[thisLine].width(thisTime) * 0.8;
+		return Draw(Sprite_HoldBody, lastX - lastW, lastY, thisX - thisW, thisY, thisX + thisW, thisY, lastX + lastW, lastY, 1, 1);
+	};
+
 	// <------ HoldEnd 模块 ------>
 	
 	EngineDataArchetype holdEndArchetype = noteArchetype;
 	holdEndArchetype.name = "Hanipure Hold End";
+	holdEndArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
+	holdEndArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdEndArchetype.updateSequential = Execute({
-		Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+		If(
+			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength,
+			Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), Execute({})
+		), DrawHoldBody(), If(
 			LevelOption.get(Option_Autoplay),
 			Execute({
 				If(
@@ -604,8 +626,13 @@ int main(int argc, char** argv) {
 	
 	EngineDataArchetype holdFlickEndArchetype = noteArchetype;
 	holdFlickEndArchetype.name = "Hanipure Hold Flick End";
+	holdFlickEndArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
+	holdFlickEndArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdFlickEndArchetype.updateSequential = Execute({
-		Draw(Sprite_NormalFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+		If(
+			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength,
+			Draw(Sprite_NormalFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), Execute({})
+		), DrawHoldBody(), If(
 			LevelOption.get(Option_Autoplay),
 			Execute({
 				If(
@@ -625,7 +652,7 @@ int main(int argc, char** argv) {
 					}), Execute({})
 				)
 			}), Execute({})
-		)																																																																																									
+		)
 	});
 	holdFlickEndArchetype.data.push_back({"last", 2});
 
@@ -633,8 +660,13 @@ int main(int argc, char** argv) {
 	
 	EngineDataArchetype holdLineArchetype = noteArchetype;
 	holdLineArchetype.name = "Hanipure Hold Line";
+	holdLineArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
+	holdLineArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdLineArchetype.updateSequential = Execute({
-		Draw(Sprite_HoldLine, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), If(
+		If(
+			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength,
+			Draw(Sprite_HoldLine, NoteFunction.x - NoteFunction.w * 0.7, NoteFunction.b, NoteFunction.x - NoteFunction.w * 0.7, NoteFunction.t, NoteFunction.x + NoteFunction.w * 0.7, NoteFunction.t, NoteFunction.x + NoteFunction.w * 0.7, NoteFunction.b, 1000 - EntityData.get(0), 1), Execute({})
+		), DrawHoldBody(), If(
 			LevelOption.get(Option_Autoplay),
 			Execute({
 				If(
