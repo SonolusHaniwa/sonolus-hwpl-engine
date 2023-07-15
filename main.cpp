@@ -571,18 +571,33 @@ int main(int argc, char** argv) {
 		)
 	});
 
+	auto newLerp = [&](var a, var b, var x){
+		var K = b - a;
+		var B = a;
+		return x * K + B;
+	};
 	auto DrawHoldBody = [&](){
 		var lastId = EntityData.get(2);
 		var lastBeat = EntityDataArray.get(lastId * 32);
 		var lastLine = EntityDataArray.get(lastId * 32 + 1);
+		var thisLine = EntityData.get(1);
 		var timeNow = RuntimeUpdate.get(0);
 		var lastTime = timeNow - lastBeat + appearTimeLength;
-		var lastX = lines[lastLine].x(lastTime);
+		var thisTime = timeNow - EntityData.get(0) + appearTimeLength;
+		var realLastX = newLerp(lines[lastLine].lowPosition, lines[lastLine].highPosition, lines[lastLine].EaseVal(1 - lastTime / appearTimeLength));
+		var realThisX = newLerp(lines[thisLine].lowPosition, lines[thisLine].highPosition, lines[thisLine].EaseVal(1 - thisTime / appearTimeLength));
+		var lastX = If(
+			lastTime > appearTimeLength,
+			newLerp(realLastX, realThisX, (lastTime - appearTimeLength) / (EntityData.get(0) - lastBeat)),
+			realLastX
+		);
 		var lastY = lines[lastLine].y(lastTime);
 		var lastW = lines[lastLine].width(lastTime) * 0.8;
-		var thisTime = timeNow - EntityData.get(0) + appearTimeLength;
-		var thisLine = EntityData.get(1);
-		var thisX = lines[thisLine].x(thisTime);
+		var thisX = If(
+			thisTime < 0,
+			newLerp(realThisX, realLastX, (0 - thisTime) / (EntityData.get(0) - lastBeat)),
+			realThisX
+		);
 		var thisY = lines[thisLine].y(thisTime);
 		var thisW = lines[thisLine].width(thisTime) * 0.8;
 		return Draw(Sprite_HoldBody, lastX - lastW, lastY, thisX - thisW, thisY, thisX + thisW, thisY, lastX + lastW, lastY, 1, 1);
