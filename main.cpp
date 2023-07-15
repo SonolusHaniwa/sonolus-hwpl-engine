@@ -588,14 +588,14 @@ int main(int argc, char** argv) {
 		var realThisX = newLerp(lines[thisLine].lowPosition, lines[thisLine].highPosition, lines[thisLine].EaseVal(1 - thisTime / appearTimeLength));
 		var lastX = If(
 			lastTime > appearTimeLength,
-			newLerp(realLastX, realThisX, (lastTime - appearTimeLength) / (EntityData.get(0) - lastBeat)),
+			newLerp(lines[lastLine].lowPosition, lines[thisLine].lowPosition, (lastTime - appearTimeLength) / (EntityData.get(0) - lastBeat)),
 			realLastX
 		);
 		var lastY = lines[lastLine].y(lastTime);
 		var lastW = lines[lastLine].width(lastTime) * 0.8;
 		var thisX = If(
 			thisTime < 0,
-			newLerp(realThisX, realLastX, (0 - thisTime) / (EntityData.get(0) - lastBeat)),
+			newLerp(lines[thisLine].highPosition, lines[lastLine].highPosition, (0 - thisTime) / (EntityData.get(0) - lastBeat)),
 			realThisX
 		);
 		var thisY = lines[thisLine].y(thisTime);
