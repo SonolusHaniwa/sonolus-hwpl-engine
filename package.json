@@ -1,10 +1,49 @@
 {
   "name": "hwpl",
-  "title": "ハニプレ",
-  "subtitle": "ハニーワークス プレミアムライブ",
-  "author": "LittleYang0531",
-  "skin": "hwpl",
-  "background": "hwpl",
-  "effect": "hwpl",
-  "particle": "hwpl"
+  "i18n": [
+    {
+      "localization": "default",
+      "title": "Hanipure",
+      "subtitle": "Honeyworks Premium Live",
+      "author": "LittleYang0531",
+      "skin": "hwpl",
+      "background": "hwpl",
+      "effect": "hwpl",
+      "particle": "hwpl",
+      "description": "A recreation of Honeyworks Premium Live engine in Sonolus.\nVersion: 1.0.0\n\nGithub Repository\nhttps://github.com/SonolusHaniwa/sonolus-hwpl-engine"
+    },
+    {
+      "localization": "ja",
+      "title": "ハニプレ",
+      "subtitle": "ハニーワークス プレミアムライブ",
+      "author": "LittleYang0531",
+      "skin": "hwpl",
+      "background": "hwpl",
+      "effect": "hwpl",
+      "particle": "hwpl",
+      "description": "A recreation of Honeyworks Premium Live engine in Sonolus.\nVersion: 1.0.0\n\nGithub Repository\nhttps://github.com/SonolusHaniwa/sonolus-hwpl-engine"
+    },
+    {
+      "localization": "en",
+      "title": "Hanipure",
+      "subtitle": "Honeyworks Premium Live",
+      "author": "LittleYang0531",
+      "skin": "hwpl",
+      "background": "hwpl",
+      "effect": "hwpl",
+      "particle": "hwpl",
+      "description": "A recreation of Honeyworks Premium Live engine in Sonolus.\nVersion: 1.0.0\n\nGithub Repository\nhttps://github.com/SonolusHaniwa/sonolus-hwpl-engine"
+    },
+    {
+      "localization": "zhs",
+      "title": "Hanipure",
+      "subtitle": "Honeyworks Premium Live",
+      "author": "LittleYang0531",
+      "skin": "hwpl",
+      "background": "hwpl",
+      "effect": "hwpl",
+      "particle": "hwpl",
+      "description": "A recreation of Honeyworks Premium Live engine in Sonolus.\nVersion: 1.0.0\n\nGithub Repository\nhttps://github.com/SonolusHaniwa/sonolus-hwpl-engine"
+    }
+  ]
 }

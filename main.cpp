@@ -55,7 +55,8 @@ enum SpriteType {
 	Sprite_JudgeNote,
 	Sprite_Stage,
 	Sprite_JudgeLine,
-	Sprite_HoldBody
+	Sprite_HoldBody,
+	Sprite_SyncLine
 };
 
 enum EffectType {
@@ -90,11 +91,6 @@ string randomRef(int len) {
 
 const int refLen = 32;
 Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
-	// 按时间排序
-/*	Json::arrayValue& v = chart;
-	sort(v.begin(), v.end(), [](Json::Value a, Json::Value b){
-		return a[1].asDouble() < b[1].asDouble();
-	});*/
 	Json::Value res; map<int, string> lastNoteRef;
 	map<double, int> minLane, maxLane;
 	srand(time(0));
@@ -189,11 +185,6 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 		single["data"][2]["value"] = maxLane[beat];
 		res.append(single);
 	}
-	// 按时间排序
-/*	Json::arrayValue& va2 = res;
-	sort(va2.begin(), va2.end(), [](Json::Value a, Json::Value b){
-		return a["data"][0]["value"].asDouble() < b["data"][0]["value"].asDouble();
-	});*/
 	Json::Value data;
 	data["bgmOffset"] = bgmOffset;
 	data["entities"] = res;
@@ -240,6 +231,11 @@ const var t = If(
 const var b = t - stage.h;
 const var speed = stage.h / defaultAppearTime / 5.0 * LevelOption.get(Option_NotesSpeed);
 const var appearTimeLength = stage.h / speed;
+auto newLerp = [](var a, var b, var x){
+	var K = b - a;
+	var B = a;
+	return x * K + B;
+};
 class line {
 	public:
 
@@ -250,7 +246,7 @@ class line {
 		return line(i);
 	}
 	var EaseVal(var t) {
-		return Ease(t, RuntimeFunction_EaseOutQuad);
+		return 1 - (1 - t) * (1 - t);
 	}
 
 	const var highPosition = (i - lineNumber / 2.0 - 0.5) * highWidth * stage.w / lineNumber;
@@ -259,10 +255,10 @@ class line {
 		return EaseVal(1 - t / appearTimeLength) * stage.h - stage.h / 2;
 	}
 	var x(var t) {
-		return Lerp(lowPosition, highPosition, EaseVal(1 - t / appearTimeLength));
+		return newLerp(lowPosition, highPosition, EaseVal(1 - t / appearTimeLength));
 	}
 	var width(var t) {
-		return Lerp(highWidth / lineNumber, 1.0 / lineNumber, 1 - (y(t) + stage.h / 2) / stage.h) * stage.w * LevelOption.get(Option_NotesSize) * 0.6;
+		return newLerp(highWidth / lineNumber, 1.0 / lineNumber, 1 - (y(t) + stage.h / 2) / stage.h) * stage.w * LevelOption.get(Option_NotesSize) * 0.6;
 	}
 	var inClickBox(Touch touch){
 		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3 * maxSize;
@@ -271,6 +267,21 @@ class line {
 		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
 		return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
 	};
+	var inClickBoxST(Touch touch){
+		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxr = lowPosition + stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
+		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+		return clickBoxl <= touch.sx && touch.sx <= clickBoxr && clickBoxb <= touch.sy && touch.sy <= clickBoxt;
+	};
+	var inClickBoxLast(Touch touch){
+		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxr = lowPosition + stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
+		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+		var x = touch.x - touch.dx, y = touch.y - touch.dy;
+		return clickBoxl <= x && x <= clickBoxr && clickBoxb <= y && y <= clickBoxt;
+	}
 }lines;
 const double noteSize = 128.0 / 1080.0;
 var clickBoxl = stage.w / (-2.0) - stage.w / lineNumber * (maxSize - 1.0) / 2.0;
@@ -359,7 +370,13 @@ int main(int argc, char** argv) {
 			ui.comboText.set(comboTextX, comboTextY, 0.5, 2.75, comboTextWidth, comboTextHeight, 0, ui.comboConfiguration.alpha, HorizontalAlign.Center, false),
 			LevelScore.set(0, score.perfect),
 			LevelScore.set(1, score.great),
-			LevelScore.set(2, score.good)
+			LevelScore.set(2, score.good),
+			lifes[3].set(0, 0, 0, -100),
+			lifes[4].set(0, 0, 0, -100),
+			lifes[5].set(0, 0, 0, -100),
+			lifes[6].set(0, 0, 0, -100),
+			lifes[7].set(0, 0, 0, -100),
+			lifes[8].set(0, 0, 0, -10)
 		}), 0, 1, Execute({}), 
 		Execute({
 			EntityDespawn.set(0, true),
@@ -450,19 +467,38 @@ int main(int argc, char** argv) {
 		Variable<EntityMemoryId> isHighlighted;
 		Variable<EntityMemoryId> touchCounter;
 		Variable<EntityMemoryId> playLoopedId;
+		Variable<EntityMemoryId> trackTouchId;
 	}NoteFunction;
+	auto judgeNote = [&](){
+		return Switch(
+			JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
+				{1, Execute({
+					EntityInput.set(0, 1),
+					Play(Effect_Perfect, minSFXDistance)
+				})}, {2, Execute({
+					EntityInput.set(0, 2),
+					Play(Effect_Great, minSFXDistance)
+				})}, {3, Execute({
+					EntityInput.set(0, 3),
+					Play(Effect_Good, minSFXDistance)
+				})}, {0, Execute({
+					EntityInput.set(0, 0)
+				})}
+			}
+		);
+	};
 	EngineDataArchetype noteArchetype = EngineDataArchetype(
 		"Hanipure Normal Note", true, {{"beat", 0}, {"lane", 1}},
 		Execute({}), 1000 + EntityData.get(0), RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength, 
-		Execute({
+		Execute({  // initialize
 			NoteFunction.isHighlighted.set(If(
 				RandomInteger(1, 4) == 1,
 				1, 
 				0
 			))
-		}), Execute({
+		}), Execute({ // updateSequential
 			If(
-				NoteFunction.isHighlighted.get(),
+				NoteFunction.isHighlighted.get() && RuntimeUpdate.get(0) <= EntityData.get(0),
 				Draw(Sprite_HighlightedNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
 				Draw(Sprite_NormalNote, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
 			), If(
@@ -474,7 +510,7 @@ int main(int argc, char** argv) {
 					EntityDespawn.set(0, 1)
 				}), Execute({})
 			)
-		}), Execute({
+		}), Execute({ // touch
 			If(
 				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
 				Execute({}),	
@@ -494,22 +530,7 @@ int main(int argc, char** argv) {
 										Execute({
 											markAsUsed(touches[NoteFunction.touchCounter.get()]),
 											EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
-											Switch(
-												JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
-													{1, Execute({
-														EntityInput.set(0, 1),
-														Play(Effect_Perfect, minSFXDistance)
-													})}, {2, Execute({
-														EntityInput.set(0, 2),
-														Play(Effect_Great, minSFXDistance)
-													})}, {3, Execute({
-														EntityInput.set(0, 3),
-														Play(Effect_Good, minSFXDistance)
-													})}, {0, Execute({
-														EntityInput.set(0, 0)
-													})}
-												}
-											),
+											judgeNote(),
 											EntityDespawn.set(0, 1)
 										}), Execute({})
 									),
@@ -520,15 +541,15 @@ int main(int argc, char** argv) {
 					)
 				})
 			)
-		}), Execute({
+		}), Execute({ // updateParallel
 			If(
-				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good && entityInfo.state == EntityState.Active,
+				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
 				Execute({
 					EntityInput.set(0, 0),
 					EntityDespawn.set(0, 1)
 				}), Execute({})
 			)
-		}), Execute({})
+		}), Execute({}) // terminate
 	);
 
 	// <------ Flick 模块 ------>
@@ -537,7 +558,7 @@ int main(int argc, char** argv) {
 	flickArchetype.name = "Hanipure Normal Flick";
 	flickArchetype.updateSequential = Execute({
 		If(
-			NoteFunction.isHighlighted.get(),
+			NoteFunction.isHighlighted.get() && RuntimeUpdate.get(0) <= EntityData.get(0),
 			Draw(Sprite_HighlightedFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
 			Draw(Sprite_NormalFlick, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
 		), If(
@@ -550,6 +571,46 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
+	auto moved = [&](Touch touch) {
+		return touch.x != touch.sx || touch.y != touch.sy;
+	};
+	auto movedLast = [&](Touch touch){
+		return Abs(touch.dx) >= 0.01 || Abs(touch.dy) >= 0.01;
+	};
+	flickArchetype.touch = Execute({
+		If(
+			RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
+			Execute({}),	
+			Execute({
+				If(
+					LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityData.get(0) - judgment.good,
+					Execute({}),
+					Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size,
+							Execute({
+								If(
+									touches[NoteFunction.touchCounter.get()].st >= EntityData.get(0) - judgment.good && // 在判定时间之后
+									!isUsed(touches[NoteFunction.touchCounter.get()]) && // 没被使用过的 touch
+									lines[EntityData.get(1)].inClickBoxST(touches[NoteFunction.touchCounter.get()]) && // 在判定范围之内
+									moved(touches[NoteFunction.touchCounter.get()]), // 有位移
+									Execute({
+										markAsUsed(touches[NoteFunction.touchCounter.get()]),
+										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+										EntityInput.set(0, 1),
+										Play(Effect_Flick, minSFXDistance),
+										EntityDespawn.set(0, 1)
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					})
+				)
+			})
+		)
+	});
 
 	// <------ HoldStart 模块 ------>
 	
@@ -557,7 +618,7 @@ int main(int argc, char** argv) {
 	holdStartArchetype.name = "Hanipure Normal Hold";
 	holdStartArchetype.updateSequential = Execute({
 		If(
-			NoteFunction.isHighlighted.get(),
+			NoteFunction.isHighlighted.get() && RuntimeUpdate.get(0) <= EntityData.get(0),
 			Draw(Sprite_HighlightedHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1),
 			Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
 		), If(
@@ -570,12 +631,7 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
-
-	auto newLerp = [&](var a, var b, var x){
-		var K = b - a;
-		var B = a;
-		return x * K + B;
-	};
+	
 	auto DrawHoldBody = [&](){
 		var lastId = EntityData.get(2);
 		var lastBeat = EntityDataArray.get(lastId * 32);
@@ -584,35 +640,37 @@ int main(int argc, char** argv) {
 		var timeNow = RuntimeUpdate.get(0);
 		var lastTime = timeNow - lastBeat + appearTimeLength;
 		var thisTime = timeNow - EntityData.get(0) + appearTimeLength;
-		var realLastX = newLerp(lines[lastLine].lowPosition, lines[lastLine].highPosition, lines[lastLine].EaseVal(1 - lastTime / appearTimeLength));
-		var realThisX = newLerp(lines[thisLine].lowPosition, lines[thisLine].highPosition, lines[thisLine].EaseVal(1 - thisTime / appearTimeLength));
+		var realLastX = newLerp(lines[lastLine].lowPosition, lines[lastLine].highPosition, lines[lastLine].EaseVal(Min(1, 1 - lastTime / appearTimeLength)));
+		var realThisX = newLerp(lines[thisLine].lowPosition, lines[thisLine].highPosition, lines[thisLine].EaseVal(Min(1, 1 - thisTime / appearTimeLength)));
 		var lastX = If(
 			lastTime > appearTimeLength,
 			newLerp(lines[lastLine].lowPosition, lines[thisLine].lowPosition, (lastTime - appearTimeLength) / (EntityData.get(0) - lastBeat)),
 			realLastX
 		);
-		var lastY = lines[lastLine].y(lastTime);
-		var lastW = lines[lastLine].width(lastTime) * 0.8;
+		var lastY = lines[lastLine].y(Min(appearTimeLength, lastTime));
+		var lastW = lines[lastLine].width(Min(appearTimeLength, lastTime)) * 0.8;
 		var thisX = If(
 			thisTime < 0,
 			newLerp(lines[thisLine].highPosition, lines[lastLine].highPosition, (0 - thisTime) / (EntityData.get(0) - lastBeat)),
 			realThisX
 		);
-		var thisY = lines[thisLine].y(thisTime);
-		var thisW = lines[thisLine].width(thisTime) * 0.8;
-		return Draw(Sprite_HoldBody, lastX - lastW, lastY, thisX - thisW, thisY, thisX + thisW, thisY, lastX + lastW, lastY, 1, 1);
+		var thisY = lines[thisLine].y(Min(appearTimeLength, Max(0, thisTime)));
+		var thisW = lines[thisLine].width(Min(appearTimeLength, Max(0, thisTime))) * 0.8;
+		return Draw(Sprite_HoldBody, lastX - lastW, lastY, thisX - thisW, thisY, thisX + thisW, thisY, lastX + lastW, lastY, 0, 1);
 	};
 
 	// <------ HoldEnd 模块 ------>
 	
 	EngineDataArchetype holdEndArchetype = noteArchetype;
 	holdEndArchetype.name = "Hanipure Hold End";
+	holdEndArchetype.preprocess = Execute({NoteFunction.trackTouchId.set(0)});
 	holdEndArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
 	holdEndArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdEndArchetype.updateSequential = Execute({
 		If(
 			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength,
-			Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), Execute({})
+			Draw(Sprite_NormalHold, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1), 
+			Execute({})
 		), DrawHoldBody(), If(
 			LevelOption.get(Option_Autoplay),
 			Execute({
@@ -635,12 +693,70 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
+	holdEndArchetype.touch = Execute({
+		If(
+			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
+			Execute({}),
+			Execute({
+				If(
+					NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size && NoteFunction.trackTouchId.get() == 0,
+							Execute({
+								If(
+									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
+									Execute({
+										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
+										Debuglog(NoteFunction.trackTouchId.get())
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					}), Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size,
+							Execute({
+								If(
+									touches[NoteFunction.touchCounter.get()].id == NoteFunction.trackTouchId.get() &&
+									touches[NoteFunction.touchCounter.get()].ended == 1,
+									Execute({
+										If(
+											RuntimeUpdate.get(0) >= EntityData.get(0) - judgment.good &&
+											RuntimeUpdate.get(0) <= EntityData.get(0) + judgment.good && // 以正确时间结束
+											lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]), // 以正确位置结束
+											Execute({
+												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+												judgeNote(),
+												EntityDespawn.set(0, 1)
+											}), Execute({
+												EntityInput.set(0, 0),
+												EntityInput.set(1, 0),
+												EntityDespawn.set(0, 1)
+											})
+										)
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					})
+				)
+			})
+		)
+	});
 	holdEndArchetype.data.push_back({"last", 2});
 
 	// <------ HoldFlickEnd 模块 ------>
 	
 	EngineDataArchetype holdFlickEndArchetype = noteArchetype;
 	holdFlickEndArchetype.name = "Hanipure Hold Flick End";
+	holdFlickEndArchetype.preprocess = Execute({NoteFunction.trackTouchId.set(0)});
 	holdFlickEndArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
 	holdFlickEndArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdFlickEndArchetype.updateSequential = Execute({
@@ -669,17 +785,77 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
+	holdFlickEndArchetype.touch = Execute({
+		If(
+			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
+			Execute({}),
+			Execute({
+				If(
+					NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size && NoteFunction.trackTouchId.get() == 0,
+							Execute({
+								If(
+									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
+									Execute({
+										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
+										Debuglog(NoteFunction.trackTouchId.get())
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					}), Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size,
+							Execute({
+								If(
+									touches[NoteFunction.touchCounter.get()].id == NoteFunction.trackTouchId.get() &&
+									touches[NoteFunction.touchCounter.get()].ended == 1,
+									Execute({
+										If(
+											RuntimeUpdate.get(0) >= EntityData.get(0) - judgment.good &&
+											RuntimeUpdate.get(0) <= EntityData.get(0) + judgment.good && // 以正确时间结束
+											lines[EntityData.get(1)].inClickBoxLast(touches[NoteFunction.touchCounter.get()]) && // 以正确位置结束
+											movedLast(touches[NoteFunction.touchCounter.get()]), // 有位移
+											Execute({
+												EntityInput.set(0, 1),
+												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+												Play(Effect_Flick, minSFXDistance),
+												EntityDespawn.set(0, 1)
+											}), Execute({
+												EntityInput.set(0, 0),
+												EntityInput.set(1, 0),
+												EntityDespawn.set(0, 1)
+											})
+										)
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					})
+				)
+			})
+		)
+	});
 	holdFlickEndArchetype.data.push_back({"last", 2});
 
 	// <------ HoldLine 模块 ------>
 	
 	EngineDataArchetype holdLineArchetype = noteArchetype;
 	holdLineArchetype.name = "Hanipure Hold Line";
+	holdLineArchetype.preprocess = Execute({NoteFunction.trackTouchId.set(0)});
 	holdLineArchetype.shouldSpawn = RuntimeUpdate.get(0) >= EntityDataArray.get(32 * EntityData.get(2)) - appearTimeLength;
 	holdLineArchetype.spawnOrder = 1000 + EntityDataArray.get(32 * EntityData.get(2));
 	holdLineArchetype.updateSequential = Execute({
 		If(
-			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength,
+			RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength && RuntimeUpdate.get(0) <= EntityData.get(0),
 			Draw(Sprite_HoldLine, NoteFunction.x - NoteFunction.w * 0.7, NoteFunction.b, NoteFunction.x - NoteFunction.w * 0.7, NoteFunction.t, NoteFunction.x + NoteFunction.w * 0.7, NoteFunction.t, NoteFunction.x + NoteFunction.w * 0.7, NoteFunction.b, 1000 - EntityData.get(0), 1), Execute({})
 		), DrawHoldBody(), If(
 			LevelOption.get(Option_Autoplay),
@@ -703,16 +879,89 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
+	holdLineArchetype.touch = Execute({
+		If(
+			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
+			Execute({}),
+			Execute({
+				If(
+					NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size && NoteFunction.trackTouchId.get() == 0,
+							Execute({
+								If(
+									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
+									Execute({
+										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
+										Debuglog(NoteFunction.trackTouchId.get())
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					}), Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size,
+							Execute({
+								If(
+									touches[NoteFunction.touchCounter.get()].id == NoteFunction.trackTouchId.get(),
+									Execute({
+										If(
+											RuntimeUpdate.get(0) >= EntityData.get(0) &&
+											lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]), // 以正确位置结束
+											Execute({
+												EntityInput.set(0, 1),
+												EntityInput.set(1, 0),
+												Play(Effect_Perfect, minSFXDistance),
+												EntityDespawn.set(0, 1)
+											}), Execute({
+												EntityInput.set(0, 0),
+												EntityInput.set(1, 0),
+												EntityDespawn.set(0, 1)
+											})
+										)
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					})
+				)
+			})
+		)
+	});
 	holdLineArchetype.data.push_back({"last", 2});
 
 	// <------ 同步线模块 ------>
 	
 	EngineDataArchetype syncLine = noteArchetype;
 	syncLine.name = "Hanipure Sync Line";
-	syncLine.data = {{"beat", 0}, {"minLane", 1}, {"maxLine", 2}};
+	syncLine.data = {{"beat", 0}, {"minLane", 1}, {"maxLane", 2}};
 	syncLine.hasInput = false;
+	auto DrawSyncLine = [](){
+		var beat = RuntimeUpdate.get(0) - EntityData.get(0) + appearTimeLength;
+		var minLine = EntityData.get(1);
+		var maxLine = EntityData.get(2);
+		var leftX = lines[minLine].x(beat);
+		var rightX = lines[maxLine].x(beat);
+		var y = lines[minLine].y(beat);
+		var w = lines[minLine].width(beat);
+		return Draw(Sprite_SyncLine, leftX, y - w, leftX, y + w, rightX, y + w, rightX, y - w, 0, 1);
+	};
 	syncLine.updateSequential = Execute({
-//		Draw(Sprite_JudgeLine, NoteFunction.l, NoteFunction.b, NoteFunction.l, NoteFunction.t, NoteFunction.r, NoteFunction.t, NoteFunction.r, NoteFunction.b, 1000 - EntityData.get(0), 1)
+		DrawSyncLine()
+	});
+	syncLine.updateParallel = Execute({
+		If(
+			RuntimeUpdate.get(0) > EntityData.get(0),
+			EntityDespawn.set(0, 1),
+			Execute({})
+		)
 	});
 
 	// <------ 引擎配置 ------>
@@ -751,7 +1000,8 @@ int main(int argc, char** argv) {
 			{"Hanipure Highlighted Hold", Sprite_HighlightedHold},
 			{"Hanipure Hold Line", Sprite_HoldLine},
 			{"Hanipure Judge Note", Sprite_JudgeNote},
-			{"Hanipure Hold Body", Sprite_HoldBody}
+			{"Hanipure Hold Body", Sprite_HoldBody},
+			{"Hanipure Sync Line", Sprite_SyncLine}
 		}, {
 			{"Hanipure Perfect", Effect_Perfect},
 			{"Hanipure Great", Effect_Great},

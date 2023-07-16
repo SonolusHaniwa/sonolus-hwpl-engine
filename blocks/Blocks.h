@@ -185,6 +185,35 @@ class ui {
     configuration secondaryMetricConfiguration = configuration(4);
 }ui;
 
+class life {
+    public:
+
+    FuncNode offset = 0;
+    FuncNode perfect = ArchetypeLife.get(0);
+    FuncNode great = ArchetypeLife.get(1);
+    FuncNode good = ArchetypeLife.get(2);
+    FuncNode miss = ArchetypeLife.get(3);
+
+    life(){};
+    life(FuncNode offset):offset(offset){
+        perfect = ArchetypeLife.get(offset * 4 + 0);
+        great = ArchetypeLife.get(offset * 4 + 1);
+        good = ArchetypeLife.get(offset * 4 + 2);
+        miss = ArchetypeLife.get(offset * 4 + 3);
+    };
+    life operator [] (FuncNode offset) {
+        return life(offset);
+    }
+    FuncNode set(FuncNode perfect, FuncNode great, FuncNode good, FuncNode bad) {
+        return Execute({
+            ArchetypeLife.set(offset * 4 + 0, perfect),
+            ArchetypeLife.set(offset * 4 + 1, great),
+            ArchetypeLife.set(offset * 4 + 2, good),
+            ArchetypeLife.set(offset * 4 + 3, bad),
+        });
+    }
+}lifes;
+
 class entityInfo {
     public:
 
