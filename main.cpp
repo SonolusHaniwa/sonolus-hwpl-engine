@@ -693,11 +693,19 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
-	holdEndArchetype.touch = Execute({
+	holdEndArchetype.updateParallel = Execute({
 		If(
 			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
 			Execute({}),
 			Execute({
+				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						EntityInput.set(0, 0),
+						EntityInput.set(1, 0),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				),
 				If(
 					NoteFunction.trackTouchId.get() == 0,
 					Execute({
@@ -707,11 +715,10 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
-										Debuglog(NoteFunction.trackTouchId.get())
 									}), Execute({})
 								),
 								NoteFunction.touchCounter.add(1),
@@ -785,11 +792,19 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
-	holdFlickEndArchetype.touch = Execute({
+	holdFlickEndArchetype.updateParallel = Execute({
 		If(
 			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
 			Execute({}),
 			Execute({
+				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						EntityInput.set(0, 0),
+						EntityInput.set(1, 0),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				),
 				If(
 					NoteFunction.trackTouchId.get() == 0,
 					Execute({
@@ -799,11 +814,10 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
-										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
-										Debuglog(NoteFunction.trackTouchId.get())
+										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
 									}), Execute({})
 								),
 								NoteFunction.touchCounter.add(1),
@@ -879,11 +893,19 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
-	holdLineArchetype.touch = Execute({
+	holdLineArchetype.updateParallel = Execute({
 		If(
 			LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityDataArray.get(EntityData.get(2) * 32) - judgment.good,
 			Execute({}),
 			Execute({
+				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
+					Execute({
+						EntityInput.set(0, 0),
+						EntityInput.set(1, 0),
+						EntityDespawn.set(0, 1)
+					}), Execute({})
+				),
 				If(
 					NoteFunction.trackTouchId.get() == 0,
 					Execute({
@@ -893,14 +915,13 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
-										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
-										Debuglog(NoteFunction.trackTouchId.get())
+										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
 									}), Execute({})
 								),
-								NoteFunction.touchCounter.add(1),
+								NoteFunction.touchCounter.add(1)
 							})
 						)
 					}), Execute({
@@ -920,9 +941,14 @@ int main(int argc, char** argv) {
 												Play(Effect_Perfect, minSFXDistance),
 												EntityDespawn.set(0, 1)
 											}), Execute({
-												EntityInput.set(0, 0),
-												EntityInput.set(1, 0),
-												EntityDespawn.set(0, 1)
+												If(
+													touches[NoteFunction.touchCounter.get()].ended == 1,
+													Execute({
+														EntityInput.set(0, 0),
+														EntityInput.set(1, 0),
+														EntityDespawn.set(0, 1)
+													}), Execute({})
+												)
 											})
 										)
 									}), Execute({})

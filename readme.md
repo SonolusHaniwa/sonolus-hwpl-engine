@@ -10,11 +10,13 @@ Todo List:
 - [x] Finished Initialization Archetype
 - [x] Finished Input Manager Archetype
 - [x] Finished Stage Archetype
-- [ ] Finished Note && Hold Note Archetype
-- [ ] Finished Flick Archetype
-- [ ] Finished Hold Line Archetype
-- [ ] Finished Hold End & Hold Flick End Archetype
-- [ ] Finished Sync Line Archetype
+- [x] Finished Note && Hold Note Archetype
+- [x] Finished Flick Archetype
+- [x] Finished Hold Line Archetype
+- [x] Finished Hold End & Hold Flick End Archetype
+- [x] Finished Sync Line Archetype
+
+目前所有普通功能皆已完工，保证能玩，但是判定有较大问题。
 
 ## Links
 
