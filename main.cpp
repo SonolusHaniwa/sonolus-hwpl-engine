@@ -91,7 +91,7 @@ string randomRef(int len) {
 
 const int refLen = 32;
 Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
-	Json::Value res; map<int, string> lastNoteRef;
+	Json::Value res; map<int, string> lastNoteRef, stNoteRef;
 	map<double, int> minLane, maxLane;
 	srand(time(0));
 	// 谱面转换
@@ -129,6 +129,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 				single["data"][1]["value"] = note[2].asInt();
 				string randomId = randomRef(refLen);
 				lastNoteRef[note[3].asInt()] = randomId;
+				stNoteRef[note[3].asInt()] = randomId;
 				single["ref"] = randomId;
 			}; break; // Normal Hold
 			case 22: {
@@ -139,6 +140,8 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 				single["data"][1]["value"] = note[2].asInt();
 				single["data"][2]["name"] = "last";
 				single["data"][2]["ref"] = lastNoteRef[note[3].asInt()];
+				single["data"][3]["name"] = "start";
+				single["data"][3]["ref"] = stNoteRef[note[3].asInt()];
 				string randomId = randomRef(refLen);
 				lastNoteRef[note[3].asInt()] = randomId;
 				single["ref"] = randomId;
@@ -151,6 +154,8 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 				single["data"][1]["value"] = note[2].asInt();
 				single["data"][2]["name"] = "last";
 				single["data"][2]["ref"] = lastNoteRef[note[3].asInt()];
+				single["data"][3]["name"] = "start";
+				single["data"][3]["ref"] = stNoteRef[note[3].asInt()];
 			} break; // Hold Normal Note
 			case 13: case 24: {
 				single["archetype"] = "Hanipure Hold Flick End";
@@ -160,6 +165,8 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 				single["data"][1]["value"] = note[2].asInt();
 				single["data"][2]["name"] = "last";
 				single["data"][2]["ref"] = lastNoteRef[note[3].asInt()];
+				single["data"][3]["name"] = "start";
+				single["data"][3]["ref"] = stNoteRef[note[3].asInt()];
 			} break; // Hold Flick Note
 		}
 		if (note[0].asInt() != 22) {
@@ -193,7 +200,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 
 // <------ 配置集合 ------>
 
-const double maxSize = 2;                 // 按键最大大小
+const double maxSize = 2.5;               // 判定大小
 const string Scope = "hwpl";              // 引擎标识符
 const string dist = "./dist";             // 资源文件输出地址
 const var interfaceGap = 0.05;            // 组件间距
@@ -545,6 +552,7 @@ int main(int argc, char** argv) {
 			If(
 				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
 				Execute({
+					Debuglog(1919810),
 					EntityInput.set(0, 0),
 					EntityDespawn.set(0, 1)
 				}), Execute({})
@@ -631,6 +639,38 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
+	holdStartArchetype.touch = Execute({ // touch
+		If(
+			RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
+			Execute({}),	
+			Execute({
+				If(
+					LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityData.get(0) - judgment.good,
+					Execute({}),
+					Execute({
+						NoteFunction.touchCounter.set(0),
+						While(
+							NoteFunction.touchCounter.get() < touches.size,
+							Execute({
+								If(
+									touches[NoteFunction.touchCounter.get()].started && 
+									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
+									lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
+									Execute({
+										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+										Debuglog(touches[NoteFunction.touchCounter.get()].id),
+										judgeNote(),
+										EntityDespawn.set(0, 1)
+									}), Execute({})
+								),
+								NoteFunction.touchCounter.add(1),
+							})
+						)
+					})
+				)
+			})
+		)
+	});
 	
 	auto DrawHoldBody = [&](){
 		var lastId = EntityData.get(2);
@@ -701,6 +741,7 @@ int main(int argc, char** argv) {
 				If(
 					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
 					Execute({
+						Debuglog(123456),
 						EntityInput.set(0, 0),
 						EntityInput.set(1, 0),
 						EntityDespawn.set(0, 1)
@@ -715,7 +756,8 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(3) * 32) - judgment.good && // 在判定时间之后
+									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
@@ -742,6 +784,7 @@ int main(int argc, char** argv) {
 												judgeNote(),
 												EntityDespawn.set(0, 1)
 											}), Execute({
+												Debuglog(654321),
 												EntityInput.set(0, 0),
 												EntityInput.set(1, 0),
 												EntityDespawn.set(0, 1)
@@ -758,6 +801,7 @@ int main(int argc, char** argv) {
 		)
 	});
 	holdEndArchetype.data.push_back({"last", 2});
+	holdEndArchetype.data.push_back({"start", 3});
 
 	// <------ HoldFlickEnd 模块 ------>
 	
@@ -814,7 +858,8 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(3) * 32) - judgment.good && // 在判定时间之后
+									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
@@ -859,6 +904,7 @@ int main(int argc, char** argv) {
 		)
 	});
 	holdFlickEndArchetype.data.push_back({"last", 2});
+	holdFlickEndArchetype.data.push_back({"start", 3});
 
 	// <------ HoldLine 模块 ------>
 	
@@ -903,6 +949,7 @@ int main(int argc, char** argv) {
 					Execute({
 						EntityInput.set(0, 0),
 						EntityInput.set(1, 0),
+						Debuglog(114514),
 						EntityDespawn.set(0, 1)
 					}), Execute({})
 				),
@@ -915,7 +962,8 @@ int main(int argc, char** argv) {
 							Execute({
 								If(
 									lines[EntityDataArray.get(EntityData.get(2) * 32 + 1)].inClickBox(touches[NoteFunction.touchCounter.get()]) && // 以上一个 hold 开始的 touch
-									// touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(2) * 32) - judgment.good && // 在判定时间之后
+									touches[NoteFunction.touchCounter.get()].st >= EntityDataArray.get(EntityData.get(3) * 32) - judgment.good && // 在判定时间之后
+									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
@@ -946,6 +994,8 @@ int main(int argc, char** argv) {
 													Execute({
 														EntityInput.set(0, 0),
 														EntityInput.set(1, 0),
+														Debuglog(touches[NoteFunction.touchCounter.get()].id),
+														
 														EntityDespawn.set(0, 1)
 													}), Execute({})
 												)
@@ -962,6 +1012,8 @@ int main(int argc, char** argv) {
 		)
 	});
 	holdLineArchetype.data.push_back({"last", 2});
+	holdLineArchetype.data.push_back({"start", 3});
+//	holdLineArchetype.updateParallel.order = 100;
 
 	// <------ 同步线模块 ------>
 	
@@ -1039,6 +1091,23 @@ int main(int argc, char** argv) {
 			// Particles
 		}, {
 			// Buckets
+			EngineDataBucket({
+				EngineDataBucketSprite(Sprite_NormalNote, 0, 0, 2, 1.5, 270)
+			}), EngineDataBucket({
+				EngineDataBucketSprite(Sprite_NormalFlick, 0, 0, 2, 1.5, 270)
+			}), EngineDataBucket({
+				EngineDataBucketSprite(Sprite_HoldBody, 0.25, 0, 1.75, 1.6, 0),
+				EngineDataBucketSprite(Sprite_NormalHold, -0.5, 0, 2, 1.5, 270)
+			}), EngineDataBucket({
+				EngineDataBucketSprite(Sprite_HoldBody, -0.5, 0, 1.75, 1.6, 0),
+				EngineDataBucketSprite(Sprite_NormalHold, 0.5, 0, 2, 1.5, 270),
+			}), EngineDataBucket({
+				EngineDataBucketSprite(Sprite_HoldBody, -0.5, 0, 1.75, 1.6, 0),
+				EngineDataBucketSprite(Sprite_NormalFlick, 0.5, 0, 2, 1.5, 270)
+			}), EngineDataBucket({
+				EngineDataBucketSprite(Sprite_HoldBody, -0.125, 0, 1.75, 1.6, 0),
+				EngineDataBucketSprite(Sprite_HoldLine, 0.75, 0, 1.4, 0.3, 270)
+			})
 		}, {
 			// Archetypes
 			initialization,

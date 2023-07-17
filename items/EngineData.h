@@ -7,12 +7,12 @@ class EngineDataBucketSprite {
     public:
 
     int id;
-    int fallbackId = 0;
     double x;
     double y;
     double w;
     double h;
     double rotation;
+	int fallbackId = 0;
 
     EngineDataBucketSprite(){}
     EngineDataBucketSprite(int id, double x, double y, double w, double h, double rotation, int fallbackId = 0):
@@ -50,6 +50,7 @@ class EngineDataBucket{
     EngineDataBucket(Json::Value arr, string unit = ""): unit(unit) {
         for (int i = 0; i < arr["sprites"].size(); i++) sprites.push_back(EngineDataBucketSprite(arr["sprites"][i]));
     }
+	EngineDataBucket(vector<EngineDataBucketSprite> sprites, string unit = ""): sprites(sprites), unit(unit){}
 
     void append(EngineDataBucketSprite sprite) {
         sprites.push_back(sprite);
