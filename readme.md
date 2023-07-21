@@ -2,7 +2,7 @@
 
 A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com).
 
-Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) to develop.
+Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) and [sonolus-server-cpp](https://github.com/SonolusHaniwa/sonolus-server-cpp) to develop.
 
 Todo List:
 
