@@ -1,6 +1,8 @@
 # Sonolus Hanipure Engine
 
-A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com).
+A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com). For Sonolus 0.7.x.
+
+适用于 Sonolus 0.7.x 的 Honeyworks Premium Live 引擎。
 
 Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) and [sonolus-server-cpp](https://github.com/SonolusHaniwa/sonolus-server-cpp) to develop.
 
@@ -18,6 +20,8 @@ Todo List:
 
 目前所有普通功能皆已完工，保证能玩，但是判定有较大问题。
 
+使用 Sonolus Server C++ v1.4.4 进行开发，并在 Ubuntu arm64 环境下编译通过。
+
 ## Links
 
 - [Sonolus Website](https://sonolus.com) 
@@ -27,10 +31,12 @@ Todo List:
 ## Installation
 
 ```bash
-sudo apt install libjsoncpp-dev openssl zlib1g-dev libssl-dev -y
-git clone https://github.com/SonolusHaniwa/sonolus-hwpl-engine
-cd sonolus-hwpl-engine && git checkout dev
-g++ main.cpp -o main -ljsoncpp -lssl -lcrypto -lz
+sudo apt install libjsoncpp-dev openssl zlib1g-dev libssl-dev -y # 安装环境依赖
+git clone https://github.com/SonolusHaniwa/sonolus-hwpl-engine # 拉取源码
+cd sonolus-hwpl-engine && git checkout dev # 修改分支
+g++ main.cpp -o main -ljsoncpp -lssl -lcrypto -lz # 编译程序
+./main # 在 dist 文件夹下生成 EngineData 和 EngineConfiguration
+./main LevelData.json dist/LevelData # 在 dist 文件夹下生成 LevelData
 ```
 
 ## Custom Resources
@@ -52,6 +58,7 @@ Engine ID: `1`
 |8|Hanipure Stage|
 |9|Hanipure Judge Line|
 |10|Hanipure Hold Body|
+|11|Hanipure Sync Line|
 
 ### Effect Clips
 
