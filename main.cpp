@@ -72,6 +72,15 @@ enum ParticleType {
 
 };
 
+enum BucketType {
+	Bucket_NormalNote,
+	Bucket_NormalFlick,
+	Bucket_NormalHold,
+	Bucket_HoldEnd,
+	Bucket_HoldFlickEnd,
+	Bucket_HoldLine
+};
+
 // <------ 谱面转换 ------>
 
 struct Note {
@@ -383,7 +392,13 @@ int main(int argc, char** argv) {
 			lifes[5].set(0, 0, 0, -100),
 			lifes[6].set(0, 0, 0, -100),
 			lifes[7].set(0, 0, 0, -100),
-			lifes[8].set(0, 0, 0, -10)
+			lifes[8].set(0, 0, 0, -10),
+			buckets[0].set(-1 * judgment.perfect, judgment.perfect, -1 * judgment.great, judgment.great, -1 * judgment.good, judgment.good),
+			buckets[1].set(-1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good),
+			buckets[2].set(-1 * judgment.perfect, judgment.perfect, -1 * judgment.great, judgment.great, -1 * judgment.good, judgment.good),
+			buckets[3].set(-1 * judgment.perfect, judgment.perfect, -1 * judgment.great, judgment.great, -1 * judgment.good, judgment.good),
+			buckets[4].set(-1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good),
+			buckets[5].set(-1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good, -1 * judgment.good, judgment.good)
 		}), 0, 1, Execute({}), 
 		Execute({
 			EntityDespawn.set(0, true),
@@ -478,7 +493,7 @@ int main(int argc, char** argv) {
 	}NoteFunction;
 	auto judgeNote = [&](){
 		return Switch(
-			JudgeSimple(touches[NoteFunction.touchCounter.get()].t, EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
+			JudgeSimple(RuntimeUpdate.get(0), EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
 				{1, Execute({
 					EntityInput.set(0, 1),
 					Play(Effect_Perfect, minSFXDistance)
@@ -513,6 +528,8 @@ int main(int argc, char** argv) {
 				Execute({
 					EntityInput.set(0, 1),
 					EntityInput.set(1, 0),
+					EntityInput.set(2, Bucket_NormalNote),
+					EntityInput.set(3, 0),
 					Play(Effect_Perfect, minSFXDistance),
 					EntityDespawn.set(0, 1)
 				}), Execute({})
@@ -538,6 +555,8 @@ int main(int argc, char** argv) {
 											markAsUsed(touches[NoteFunction.touchCounter.get()]),
 											EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 											judgeNote(),
+											EntityInput.set(2, Bucket_NormalNote),
+											EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 											EntityDespawn.set(0, 1)
 										}), Execute({})
 									),
@@ -552,7 +571,6 @@ int main(int argc, char** argv) {
 			If(
 				RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
 				Execute({
-					Debuglog(1919810),
 					EntityInput.set(0, 0),
 					EntityDespawn.set(0, 1)
 				}), Execute({})
@@ -575,6 +593,8 @@ int main(int argc, char** argv) {
 				EntityInput.set(0, 1),
 				EntityInput.set(1, 0),
 				Play(Effect_Flick, minSFXDistance),
+				EntityInput.set(2, Bucket_NormalFlick),
+				EntityInput.set(3, 0),
 				EntityDespawn.set(0, 1)
 			}), Execute({})
 		)
@@ -588,7 +608,7 @@ int main(int argc, char** argv) {
 	flickArchetype.touch = Execute({
 		If(
 			RuntimeUpdate.get(0) > EntityData.get(0) + judgment.good,
-			Execute({}),	
+			Execute({}),
 			Execute({
 				If(
 					LevelOption.get(Option_Autoplay) || RuntimeUpdate.get(0) < EntityData.get(0) - judgment.good,
@@ -608,6 +628,8 @@ int main(int argc, char** argv) {
 										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 										EntityInput.set(0, 1),
 										Play(Effect_Flick, minSFXDistance),
+										EntityInput.set(2, Bucket_NormalFlick),
+										EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 										EntityDespawn.set(0, 1)
 									}), Execute({})
 								),
@@ -635,6 +657,8 @@ int main(int argc, char** argv) {
 				EntityInput.set(0, 1),
 				EntityInput.set(1, 0),
 				Play(Effect_Perfect, minSFXDistance),
+				EntityInput.set(2, Bucket_NormalHold),
+				EntityInput.set(3, 0),
 				EntityDespawn.set(0, 1)
 			}), Execute({})
 		)
@@ -658,8 +682,10 @@ int main(int argc, char** argv) {
 									lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
 									Execute({
 										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
-										Debuglog(touches[NoteFunction.touchCounter.get()].id),
+//										Debuglog(touches[NoteFunction.touchCounter.get()].id),
 										judgeNote(),
+										EntityInput.set(2, Bucket_NormalHold),
+										EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 										EntityDespawn.set(0, 1)
 									}), Execute({})
 								),
@@ -727,6 +753,8 @@ int main(int argc, char** argv) {
 						EntityInput.set(1, 0),
 						StopLooped(NoteFunction.playLoopedId.get()),
 						Play(Effect_Perfect, minSFXDistance),
+						EntityInput.set(2, Bucket_HoldEnd),
+						EntityInput.set(3, 0),
 						EntityDespawn.set(0, 1)
 					}), Execute({})
 				)
@@ -741,7 +769,6 @@ int main(int argc, char** argv) {
 				If(
 					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
 					Execute({
-						Debuglog(123456),
 						EntityInput.set(0, 0),
 						EntityInput.set(1, 0),
 						EntityDespawn.set(0, 1)
@@ -782,9 +809,10 @@ int main(int argc, char** argv) {
 											Execute({
 												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												judgeNote(),
+												EntityInput.set(2, Bucket_HoldEnd),
+												EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												EntityDespawn.set(0, 1)
 											}), Execute({
-												Debuglog(654321),
 												EntityInput.set(0, 0),
 												EntityInput.set(1, 0),
 												EntityDespawn.set(0, 1)
@@ -800,6 +828,7 @@ int main(int argc, char** argv) {
 			})
 		)
 	});
+	holdEndArchetype.touch = Execute({});
 	holdEndArchetype.data.push_back({"last", 2});
 	holdEndArchetype.data.push_back({"start", 3});
 
@@ -830,6 +859,8 @@ int main(int argc, char** argv) {
 						EntityInput.set(1, 0),
 						StopLooped(NoteFunction.playLoopedId.get()),
 						Play(Effect_Flick, minSFXDistance),
+						EntityInput.set(2, Bucket_HoldFlickEnd),
+						EntityInput.set(3, 0),
 						EntityDespawn.set(0, 1)
 					}), Execute({})
 				)
@@ -886,6 +917,8 @@ int main(int argc, char** argv) {
 												EntityInput.set(0, 1),
 												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												Play(Effect_Flick, minSFXDistance),
+												EntityInput.set(2, Bucket_HoldFlickEnd),
+												EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												EntityDespawn.set(0, 1)
 											}), Execute({
 												EntityInput.set(0, 0),
@@ -903,6 +936,7 @@ int main(int argc, char** argv) {
 			})
 		)
 	});
+	holdFlickEndArchetype.touch = Execute({});
 	holdFlickEndArchetype.data.push_back({"last", 2});
 	holdFlickEndArchetype.data.push_back({"start", 3});
 
@@ -933,6 +967,8 @@ int main(int argc, char** argv) {
 						EntityInput.set(1, 0),
 						StopLooped(NoteFunction.playLoopedId.get()),
 						Play(Effect_Perfect, minSFXDistance),
+						EntityInput.set(2, Bucket_HoldLine),
+						EntityInput.set(3, 0),
 						EntityDespawn.set(0, 1)
 					}), Execute({})
 				)
@@ -949,7 +985,6 @@ int main(int argc, char** argv) {
 					Execute({
 						EntityInput.set(0, 0),
 						EntityInput.set(1, 0),
-						Debuglog(114514),
 						EntityDespawn.set(0, 1)
 					}), Execute({})
 				),
@@ -987,6 +1022,8 @@ int main(int argc, char** argv) {
 												EntityInput.set(0, 1),
 												EntityInput.set(1, 0),
 												Play(Effect_Perfect, minSFXDistance),
+												EntityInput.set(2, Bucket_HoldLine),
+												EntityInput.set(3, 0),
 												EntityDespawn.set(0, 1)
 											}), Execute({
 												If(
@@ -1011,6 +1048,7 @@ int main(int argc, char** argv) {
 			})
 		)
 	});
+	holdLineArchetype.touch = Execute({});
 	holdLineArchetype.data.push_back({"last", 2});
 	holdLineArchetype.data.push_back({"start", 3});
 //	holdLineArchetype.updateParallel.order = 100;

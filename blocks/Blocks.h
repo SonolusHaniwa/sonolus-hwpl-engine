@@ -46,7 +46,14 @@ class Pointer {
     FuncNode set(FuncNode i, FuncNode value) {
         if (size != -1 && i.isValue == true &&
             (i.value >= size || i.value < 0)) throwWarning("");
-        return Set(identifierId, Add({i, offset}), value);
+        return Execute({
+			If(
+				identifierId == EntityInputId && i == 0,
+				Debuglog(value),
+				Execute({})
+			),
+			Set(identifierId, Add({i, offset}), value)
+		});
     }
 
     FuncNode set2(FuncNode i, FuncNode value) {
@@ -213,6 +220,39 @@ class life {
         });
     }
 }lifes;
+
+class bucket {
+	public:
+
+	FuncNode offset = 0;
+	FuncNode minPerfect = LevelBucket.get(0), maxPerfect = LevelBucket.get(1);
+	FuncNode minGreat = LevelBucket.get(2), maxGreat = LevelBucket.get(3);
+	FuncNode minGood = LevelBucket.get(4), maxGood = LevelBucket.get(5);
+
+	bucket(){}
+	bucket(FuncNode offset):offset(offset){
+		minPerfect = LevelBucket.get(offset * 6 + 0);
+		maxPerfect = LevelBucket.get(offset * 6 + 1);
+		minGreat = LevelBucket.get(offset * 6 + 2);
+		maxGreat = LevelBucket.get(offset * 6 + 3);
+		minGood = LevelBucket.get(offset * 6 + 4);
+		maxGood = LevelBucket.get(offset * 6 + 5);
+	}
+	bucket operator [] (FuncNode offset) {
+		return bucket(offset);
+	}
+
+	FuncNode set(FuncNode minPerfect, FuncNode maxPerfect, FuncNode minGreat, FuncNode maxGreat, FuncNode minGood, FuncNode maxGood) {
+		return Execute({
+			LevelBucket.set(offset * 6 + 0, minPerfect),
+			LevelBucket.set(offset * 6 + 1, maxPerfect),
+			LevelBucket.set(offset * 6 + 2, minGreat),
+			LevelBucket.set(offset * 6 + 3, maxGreat),
+			LevelBucket.set(offset * 6 + 4, minGood),
+			LevelBucket.set(offset * 6 + 5, maxGood)
+		});
+	}
+}buckets;
 
 class entityInfo {
     public:
