@@ -47,11 +47,6 @@ class Pointer {
         if (size != -1 && i.isValue == true &&
             (i.value >= size || i.value < 0)) throwWarning("");
         return Execute({
-			If(
-				identifierId == EntityInputId && i == 0,
-				Debuglog(value),
-				Execute({})
-			),
 			Set(identifierId, Add({i, offset}), value)
 		});
     }
