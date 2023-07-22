@@ -18,8 +18,6 @@ Todo List:
 - [x] Finished Hold End & Hold Flick End Archetype
 - [x] Finished Sync Line Archetype
 
-目前所有普通功能皆已完工，保证能玩，但是判定有较大问题。
-
 使用 Sonolus Server C++ v1.4.4 进行开发，并在 Ubuntu arm64 环境下编译通过。
 
 ## Links
@@ -33,15 +31,13 @@ Todo List:
 ```bash
 sudo apt install libjsoncpp-dev openssl zlib1g-dev libssl-dev -y # 安装环境依赖
 git clone https://github.com/SonolusHaniwa/sonolus-hwpl-engine # 拉取源码
-cd sonolus-hwpl-engine && git checkout dev # 修改分支
+cd sonolus-hwpl-engine # 修改目录
 g++ main.cpp -o main -ljsoncpp -lssl -lcrypto -lz # 编译程序
 ./main # 在 dist 文件夹下生成 EngineData 和 EngineConfiguration
 ./main LevelData.json dist/LevelData # 在 dist 文件夹下生成 LevelData
 ```
 
 ## Custom Resources
-
-Engine ID: `1`
 
 ### Skin Sprites
 
