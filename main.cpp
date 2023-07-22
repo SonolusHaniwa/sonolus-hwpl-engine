@@ -1031,7 +1031,7 @@ int main(int argc, char** argv) {
 													Execute({
 														EntityInput.set(0, 0),
 														EntityInput.set(1, 0),
-														Debuglog(touches[NoteFunction.touchCounter.get()].id),
+														// Debuglog(touches[NoteFunction.touchCounter.get()].id),
 														
 														EntityDespawn.set(0, 1)
 													}), Execute({})
