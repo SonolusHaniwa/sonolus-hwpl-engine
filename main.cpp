@@ -20,14 +20,14 @@ string readFile(string path) {
 // <------ 预定义枚举类型 ------>
 
 enum OptionType {
-	Option_Autoplay,
-	Option_StrictJudge,
+	Option_Autoplay,          // Supported
+	Option_StrictJudge,       // Supported
 	Option_Mirror,
-	Option_NotesSpeed,
-	Option_NotesSize,
-	Option_SyncLine,
-	Option_LockAspectRadio,
-	Option_Stage
+	Option_NotesSpeed,        // Supported
+	Option_NotesSize,         // Supported
+	Option_SyncLine,          // Supported
+	Option_LockAspectRadio,   // Supported
+	Option_Stage              // Supported
 };
 
 enum NoteType {
@@ -115,6 +115,7 @@ Json::Value fromHanipure(Json::Value chart, double bgmOffset = 0) {
 	for (int i = 0; i < chart.size(); i++) {
 		Json::Value note = chart[i];
 		Json::Value single, data; single["data"].resize(0);
+		if (note[0].asInt() >= 10 && note[0].asInt() < 20) note[3] = 1e5 + note[3].asInt();
 		switch(note[0].asInt()) {
 			case 1: {
 				single["archetype"] = "Hanipure Normal Note";
@@ -307,9 +308,18 @@ var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
 class judgment {
 	public:
 
-	var perfect = 0.05;
-	var great = 0.10;
-	var good = 0.15;
+	var perfect = If(
+		LevelOption.get(Option_StrictJudge) == 1,
+		0.035, 0.05
+	);
+	var great = If(
+		LevelOption.get(Option_StrictJudge) == 1,
+		0.05, 0.10
+	);
+	var good = If(
+		LevelOption.get(Option_StrictJudge) == 1,
+		0.08, 0.15
+	);
 }judgment;
 class score {
 	public:
@@ -407,14 +417,17 @@ int main(int argc, char** argv) {
 
 	// <------ 输入管理器模块 ------>
 
-	Array<LevelMemoryId> usedTouchIds = Array<LevelMemoryId>(16);
+	Array<LevelMemoryId> usedTouchIds = Array<LevelMemoryId>(16), stageTouchIds = Array<LevelMemoryId>(16);
 	auto isUsed = [&](Touch touch){return Execute({usedTouchIds.has(touch.id)});};
 	auto markAsUsed = [&](Touch touch){return Execute({usedTouchIds.add(touch.id)});};
+	auto isStageUsed = [&](Touch touch){return Execute({stageTouchIds.has(touch.id)});};
+	auto markAsStageUsed = [&](Touch touch){return Execute({stageTouchIds.add(touch.id)});};
 	EngineDataArchetype inputManager = EngineDataArchetype(
 		"Hanipure Input Manager", false, {},
 		Execute({}), 1, EntityInfoArray.get(2) == EntityState.Despawned, 
 		Execute({}), Execute({}), Execute({
-			usedTouchIds.clear()
+			usedTouchIds.clear(),
+			stageTouchIds.clear(),
 		}), Execute({}), Execute({})
 	);
 
@@ -460,11 +473,12 @@ int main(int argc, char** argv) {
 						Execute({
 							If (
 								touches[touchCounter.get()].started &&
-								!isUsed(touches[touchCounter.get()]) &&
+								!isStageUsed(touches[touchCounter.get()]) &&
 								inClickBox(touches[touchCounter.get()]),
 								Execute({
 									StageFunction.onEmptyTop(),
-									markAsUsed(touches[touchCounter.get()])
+									markAsUsed(touches[touchCounter.get()]),
+									markAsStageUsed(touches[touchCounter.get()])
 								}),
 								Execute({})
 							), touchCounter.add(1)
@@ -553,6 +567,7 @@ int main(int argc, char** argv) {
 										lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
 										Execute({
 											markAsUsed(touches[NoteFunction.touchCounter.get()]),
+											markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 											EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 											judgeNote(),
 											EntityInput.set(2, Bucket_NormalNote),
@@ -577,6 +592,12 @@ int main(int argc, char** argv) {
 			)
 		}), Execute({}) // terminate
 	);
+	noteArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
+		)
+	});
 
 	// <------ Flick 模块 ------>
 
@@ -599,11 +620,8 @@ int main(int argc, char** argv) {
 			}), Execute({})
 		)
 	});
-	auto moved = [&](Touch touch) {
-		return touch.x != touch.sx || touch.y != touch.sy;
-	};
 	auto movedLast = [&](Touch touch){
-		return Abs(touch.dx) >= 0.01 || Abs(touch.dy) >= 0.01;
+		return Abs(touch.dx) >= 0.05 || Abs(touch.dy) >= 0.05;
 	};
 	flickArchetype.touch = Execute({
 		If(
@@ -622,9 +640,10 @@ int main(int argc, char** argv) {
 									touches[NoteFunction.touchCounter.get()].st >= EntityData.get(0) - judgment.good && // 在判定时间之后
 									!isUsed(touches[NoteFunction.touchCounter.get()]) && // 没被使用过的 touch
 									lines[EntityData.get(1)].inClickBoxST(touches[NoteFunction.touchCounter.get()]) && // 在判定范围之内
-									moved(touches[NoteFunction.touchCounter.get()]), // 有位移
+									movedLast(touches[NoteFunction.touchCounter.get()]), // 有位移
 									Execute({
 										markAsUsed(touches[NoteFunction.touchCounter.get()]),
+										markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 										EntityInput.set(0, 1),
 										Play(Effect_Flick, minSFXDistance),
@@ -639,6 +658,12 @@ int main(int argc, char** argv) {
 					})
 				)
 			})
+		)
+	});
+	flickArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
 		)
 	});
 
@@ -681,8 +706,8 @@ int main(int argc, char** argv) {
 									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]),
 									Execute({
+										markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 										EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
-//										Debuglog(touches[NoteFunction.touchCounter.get()].id),
 										judgeNote(),
 										EntityInput.set(2, Bucket_NormalHold),
 										EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
@@ -695,6 +720,12 @@ int main(int argc, char** argv) {
 					})
 				)
 			})
+		)
+	});
+	holdStartArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
 		)
 	});
 	
@@ -767,6 +798,13 @@ int main(int argc, char** argv) {
 			Execute({}),
 			Execute({
 				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(32 * EntityData.get(2)) - judgment.good &&
+					NoteFunction.trackTouchId.get() != 0 && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
 					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
 					Execute({
 						EntityInput.set(0, 0),
@@ -787,6 +825,7 @@ int main(int argc, char** argv) {
 									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
+										markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id),
 									}), Execute({})
 								),
@@ -808,11 +847,13 @@ int main(int argc, char** argv) {
 											lines[EntityData.get(1)].inClickBox(touches[NoteFunction.touchCounter.get()]), // 以正确位置结束
 											Execute({
 												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+												StopLooped(NoteFunction.playLoopedId.get()),
 												judgeNote(),
 												EntityInput.set(2, Bucket_HoldEnd),
 												EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												EntityDespawn.set(0, 1)
 											}), Execute({
+												StopLooped(NoteFunction.playLoopedId.get()),
 												EntityInput.set(0, 0),
 												EntityInput.set(1, 0),
 												EntityDespawn.set(0, 1)
@@ -826,6 +867,12 @@ int main(int argc, char** argv) {
 					})
 				)
 			})
+		)
+	});
+	holdEndArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
 		)
 	});
 	holdEndArchetype.touch = Execute({});
@@ -873,6 +920,13 @@ int main(int argc, char** argv) {
 			Execute({}),
 			Execute({
 				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(32 * EntityData.get(2)) - judgment.good &&
+					NoteFunction.trackTouchId.get() != 0 && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
 					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
 					Execute({
 						EntityInput.set(0, 0),
@@ -893,6 +947,7 @@ int main(int argc, char** argv) {
 									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
+										markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
 									}), Execute({})
 								),
@@ -905,8 +960,7 @@ int main(int argc, char** argv) {
 							NoteFunction.touchCounter.get() < touches.size,
 							Execute({
 								If(
-									touches[NoteFunction.touchCounter.get()].id == NoteFunction.trackTouchId.get() &&
-									touches[NoteFunction.touchCounter.get()].ended == 1,
+									touches[NoteFunction.touchCounter.get()].id == NoteFunction.trackTouchId.get(),
 									Execute({
 										If(
 											RuntimeUpdate.get(0) >= EntityData.get(0) - judgment.good &&
@@ -916,14 +970,21 @@ int main(int argc, char** argv) {
 											Execute({
 												EntityInput.set(0, 1),
 												EntityInput.set(1, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
+												StopLooped(NoteFunction.playLoopedId.get()),
 												Play(Effect_Flick, minSFXDistance),
 												EntityInput.set(2, Bucket_HoldFlickEnd),
 												EntityInput.set(3, touches[NoteFunction.touchCounter.get()].t - EntityData.get(0)),
 												EntityDespawn.set(0, 1)
 											}), Execute({
-												EntityInput.set(0, 0),
-												EntityInput.set(1, 0),
-												EntityDespawn.set(0, 1)
+												If(
+													touches[NoteFunction.touchCounter.get()].ended == 1,
+													Execute({
+														StopLooped(NoteFunction.playLoopedId.get()),
+														EntityInput.set(0, 0),
+														EntityInput.set(1, 0),
+														EntityDespawn.set(0, 1)
+													}), Execute({})
+												)
 											})
 										)
 									}), Execute({})
@@ -934,6 +995,12 @@ int main(int argc, char** argv) {
 					})
 				)
 			})
+		)
+	});
+	holdFlickEndArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
 		)
 	});
 	holdFlickEndArchetype.touch = Execute({});
@@ -981,6 +1048,13 @@ int main(int argc, char** argv) {
 			Execute({}),
 			Execute({
 				If(
+					RuntimeUpdate.get(0) > EntityDataArray.get(32 * EntityData.get(2)) - judgment.good &&
+					NoteFunction.trackTouchId.get() != 0 && NoteFunction.playLoopedId.get() == 0,
+					Execute({
+						NoteFunction.playLoopedId.set(PlayLooped(Effect_Hold))
+					}), Execute({})
+				),
+				If(
 					RuntimeUpdate.get(0) > EntityDataArray.get(EntityData.get(2) * 32) + judgment.good && NoteFunction.trackTouchId.get() == 0,
 					Execute({
 						EntityInput.set(0, 0),
@@ -1001,6 +1075,7 @@ int main(int argc, char** argv) {
 									!isUsed(touches[NoteFunction.touchCounter.get()]) &&
 									touches[NoteFunction.touchCounter.get()].st <= EntityDataArray.get(EntityData.get(2) * 32) + judgment.good, // 在判定时间之前
 									Execute({
+										markAsStageUsed(touches[NoteFunction.touchCounter.get()]),
 										NoteFunction.trackTouchId.set(touches[NoteFunction.touchCounter.get()].id)
 									}), Execute({})
 								),
@@ -1021,6 +1096,7 @@ int main(int argc, char** argv) {
 											Execute({
 												EntityInput.set(0, 1),
 												EntityInput.set(1, 0),
+												StopLooped(NoteFunction.playLoopedId.get()),
 												Play(Effect_Perfect, minSFXDistance),
 												EntityInput.set(2, Bucket_HoldLine),
 												EntityInput.set(3, 0),
@@ -1029,10 +1105,9 @@ int main(int argc, char** argv) {
 												If(
 													touches[NoteFunction.touchCounter.get()].ended == 1,
 													Execute({
+														StopLooped(NoteFunction.playLoopedId.get()),
 														EntityInput.set(0, 0),
 														EntityInput.set(1, 0),
-														// Debuglog(touches[NoteFunction.touchCounter.get()].id),
-														
 														EntityDespawn.set(0, 1)
 													}), Execute({})
 												)
@@ -1048,10 +1123,15 @@ int main(int argc, char** argv) {
 			})
 		)
 	});
+	holdLineArchetype.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			EntityData.set(1, 7 - EntityData.get(1)), Execute({})
+		)
+	});
 	holdLineArchetype.touch = Execute({});
 	holdLineArchetype.data.push_back({"last", 2});
 	holdLineArchetype.data.push_back({"start", 3});
-//	holdLineArchetype.updateParallel.order = 100;
 
 	// <------ 同步线模块 ------>
 	
@@ -1067,7 +1147,11 @@ int main(int argc, char** argv) {
 		var rightX = lines[maxLine].x(beat);
 		var y = lines[minLine].y(beat);
 		var w = lines[minLine].width(beat);
-		return Draw(Sprite_SyncLine, leftX, y - w, leftX, y + w, rightX, y + w, rightX, y - w, 0, 1);
+		return If(
+			LevelOption.get(Option_SyncLine) == 1,
+			Draw(Sprite_SyncLine, leftX, y - w, leftX, y + w, rightX, y + w, rightX, y - w, 0, 1),
+			Execute({})
+		);
 	};
 	syncLine.updateSequential = Execute({
 		DrawSyncLine()
@@ -1079,6 +1163,18 @@ int main(int argc, char** argv) {
 			Execute({})
 		)
 	});
+	syncLine.preprocess = Execute({
+		If(
+			LevelOption.get(Option_Mirror) == 1,
+			Execute({
+				NoteFunction.touchCounter.set(EntityData.get(1)),
+				EntityData.set(1, 7 - EntityData.get(2)),
+				EntityData.set(2, 7 - NoteFunction.touchCounter.get()),
+				NoteFunction.touchCounter.set(0)
+			}), Execute({})
+		)
+	});
+	syncLine.touch = Execute({});
 
 	// <------ 引擎配置 ------>
 	
