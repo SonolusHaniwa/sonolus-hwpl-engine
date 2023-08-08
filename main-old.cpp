@@ -714,7 +714,7 @@ int main(int argc, char** argv) {
 										EntityDespawn.set(0, 1)
 									}), Execute({})
 								),
-								NoteFunction.touchCounter.add(1),
+								NoteFunction.touchCounter.add(1),size
 							})
 						)
 					})

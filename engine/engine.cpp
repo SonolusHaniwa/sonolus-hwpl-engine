@@ -18,3 +18,5 @@ const string Scope = "hwpl";
 #include"data/archetypes/HoldStart.cpp"
 #include"data/archetypes/HoldEnd.cpp"
 #include"data/archetypes/HoldFlickEnd.cpp"
+#include"data/archetypes/HoldLine.cpp"
+#include"data/archetypes/SyncLine.cpp"

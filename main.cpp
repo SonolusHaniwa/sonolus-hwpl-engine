@@ -5,9 +5,6 @@ using namespace std;
 const string dist = "./dist";
 #include"engine/engine.cpp"
 
-#undef for
-#undef done
-
 int main(int argc, char** argv) {
     engineConfiguration.ui = configurationUI;
 
