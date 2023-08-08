@@ -16,7 +16,8 @@ int main(int argc, char** argv) {
         Initialization, 
         InputManager,
         Stage,
-        NormalNote
+        NormalNote,
+        NormalFlick
     >(configuration, data);
     ofstream fout((dist + "/EngineConfiguration"));
     for (int i = 0; i < configuration.size(); i++) fout << configuration.v[i];

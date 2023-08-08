@@ -35,9 +35,15 @@ class NormalNote: public Archetype {
     var l = x - w, r = x + w;
     var t = y + w, b = y - w;
 
-    var spawnOrder = 1000 + EntityData.get(0);
+    var preprocess = {
+        IF (LevelOption.get(Options.mirror) == 1) {
+            EntityData.set(1, 7 - EntityData.get(1))
+        } FI,
+    };
 
-    var shouldSpawn = RuntimeUpdate.get(0) >= EntityData.get(0) - appearTimeLength;
+    var spawnOrder = 1000 + beat;
+
+    var shouldSpawn = times.now >= beat - appearTimeLength;
 
     var initialize = {
         IF (RandomInteger(0, 4) == 0) {
