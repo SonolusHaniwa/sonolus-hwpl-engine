@@ -1,25 +1,6 @@
 using namespace std;
 using namespace playData;
 
-auto judgeNote = [](){
-    return Switch(
-        JudgeSimple(times.now, EntityData.get(0), judgment.perfect, judgment.great, judgment.good), {
-            {1, Execute({
-                EntityInput.set(0, 1),
-                Play(Clips.Perfect, minSFXDistance)
-            })}, {2, Execute({
-                EntityInput.set(0, 2),
-                Play(Clips.Great, minSFXDistance)
-            })}, {3, Execute({
-                EntityInput.set(0, 3),
-                Play(Clips.Good, minSFXDistance)
-            })}, {0, Execute({
-                EntityInput.set(0, 0)
-            })}
-        }
-    );
-};
-
 class NormalNote: public Archetype {
     public:
 

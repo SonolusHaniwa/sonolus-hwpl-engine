@@ -35,7 +35,7 @@ class HoldStart: public Archetype {
         IF (isHighlighted.get() == 1 && times.now <= beat) {
             Draw(Sprites.HighlightedHold, l, b, l, t, r, t, r, b, 1000 - beat, 1),
         } ELSE {
-            Draw(Sprites.NormalHold, l, b, l, t, r, b, r, t, 1000 - beat, 1),
+            Draw(Sprites.NormalHold, l, b, l, t, r, t, r, b, 1000 - beat, 1),
         } FI,
         IF (LevelOption.get(Options.autoplay) && times.now >= beat) {
             EntityInput.set(0, 1),

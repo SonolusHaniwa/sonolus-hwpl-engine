@@ -1,10 +1,6 @@
 using namespace std;
 using namespace playData;
 
-auto movedLast = [](Touch touch) {
-    return Abs(touch.dx) >= 0.05 && Abs(touch.dy) >= 0.05;
-};
-
 class NormalFlick: public Archetype {
     public:
 
@@ -52,9 +48,6 @@ class NormalFlick: public Archetype {
     };
 
     var touch = {
-        IF (times.now > beat + judgment.good) {
-            Return(0)
-        } FI,
         IF (LevelOption.get(Options.autoplay) || times.now < beat - judgment.good) {
             Return(0)
         } FI,
@@ -69,5 +62,12 @@ class NormalFlick: public Archetype {
 				EntityDespawn.set(0, 1)
             } FI,
         } DONE,
+    };
+
+    var updateParallel = {
+        IF (times.now > beat + judgment.good) {
+            EntityInput.set(0, 0),
+            EntityDespawn.set(0, 1)
+        } FI
     };
 };
