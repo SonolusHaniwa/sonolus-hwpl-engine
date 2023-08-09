@@ -305,6 +305,10 @@ FuncNode Or(vector<FuncNode> value) {
     return FuncNode(RuntimeFunction.Or, value);
 }
 
+FuncNode Paint(FuncNode id, FuncNode x, FuncNode y, FuncNode size, FuncNode rotation, FuncNode z, FuncNode a) {
+    return FuncNode(RuntimeFunction.Paint, {id, x, y, size, rotation, z, a});
+}
+
 FuncNode Play(FuncNode id, FuncNode distance) {
     return FuncNode(RuntimeFunction.Play, {id, distance});
 }

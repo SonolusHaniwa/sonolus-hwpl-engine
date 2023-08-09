@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 class Stage: public Archetype {
     public:

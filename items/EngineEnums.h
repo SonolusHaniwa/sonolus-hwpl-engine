@@ -121,6 +121,32 @@ class UnitText {
     string Millisecond = "#MILLISECOND";
 }UnitText;
 
+class InstructionText {
+    public:
+
+    string Tap = "#TAP";
+    string TapAndHold = "#TAP_HOLD";
+    string TapAndRelease = "#TAP_RELEASE";
+    string TapAndFlick = "#TAP_FLICK";
+    string TapAndSlide = "#TAP_SLIDE";
+    string Hold = "#HOLD";
+    string HoldAndSlide = "#HOLD_SLIDE";
+    string HoldAndFollow = "#HOLD_FOLLOW";
+    string Release = "#RELEASE";
+    string Flick = "#FLICK";
+    string Slide = "#SLIDE";
+    string SlideAndFlick = "#SLIDE_FLICK";
+    string Avoid = "#AVOID";
+    string Jiggle = "#JIGGLE";
+}InstructionText;
+
+class InstructionIconName {
+    public:
+    
+    string Hand = "#HAND";
+    string Arrow = "#ARROW";
+}InstructionIconName;
+
 class OptionType {
     public:
 
@@ -322,6 +348,7 @@ class RuntimeFunction {
     string DebugPause = "DebugPause";
     string DebugLog = "DebugLog";
     string JumpLoop = "JumpLoop";
+    string Paint = "Paint";
     string PlayLooped = "PlayLooped";
     string PlayLoopedScheduled = "PlayLoopedScheduled";
     string StopLooped = "StopLooped";

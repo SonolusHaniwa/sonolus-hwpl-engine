@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 class HoldStart: public Archetype {
     public:
