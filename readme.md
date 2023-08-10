@@ -2,7 +2,7 @@
 
 A recreation of Honeyworks Premium Live engine in [Sonolus](https://sonolus.com). For Sonolus 0.7.x.
 
-适用于 Sonolus 0.7.x 的 Honeyworks Premium Live 引擎。
+适用于 Sonolus 0.7.2+ 的 Honeyworks Premium Live 引擎。
 
 Use [sonolus.h](https://github.com/SonolusHaniwa/sonolus.h) and [sonolus-server-cpp](https://github.com/SonolusHaniwa/sonolus-server-cpp) to develop.
 
