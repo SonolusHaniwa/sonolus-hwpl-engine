@@ -47,3 +47,97 @@ var drawStage() {
         drawFunc.args.push_back(Draw(Sprites.JudgeNote, notel, noteb, notel, notet, noter, notet, noter, noteb, 3, 1));
     } return drawFunc;
 }
+
+
+var drawFrozenHand(var lane, var percent, bool in = true, bool out = true) {
+	var angle = IF (percent < 25) {
+		handStartAngle,
+	} ELSE {
+		IF (percent < 75) {
+			(percent - 25) / 50 * (handEndAngle - handStartAngle) + handStartAngle
+		} ELSE {
+			handEndAngle
+		} FI
+	} FI;
+	var goalX = lines[lane].x(appearTimeLength);
+	var goalY = lines[lane].y(appearTimeLength);
+	var centerX = goalX + handCircleR * Sin(handEndAngle / 180 * acos(-1));
+	var centerY = goalY - handCircleR * Cos(handEndAngle / 180 * acos(-1));
+	var x = centerX - handCircleR * Sin(angle / 180 * acos(-1));
+	var y = centerY + handCircleR * Cos(angle / 180 * acos(-1));
+	var a = IF (percent < 25) {
+		(!in) ? 1 : 1.0 * percent / 25
+	} ELSE {
+		IF (percent < 75) {
+			1
+		} ELSE {
+			(!out) ? 1 : 1.0 - 1.0 * (percent - 75) / 25
+		} FI
+	} FI;
+	return Paint(Icons.hand, x, y, handSize, angle, 2000, a);
+}
+
+var drawUpperHand(var lane, var percent, var angle, bool in = false, bool out = true) {
+	var goalX = lines[lane].x(appearTimeLength);
+	var goalY = lines[lane].y(appearTimeLength);
+	var x = lines[lane].x(appearTimeLength);
+	var y = lines[lane].y(appearTimeLength) + IF (percent < 25) {
+		0
+	} ELSE {
+		IF (percent < 75) {
+			(percent - 25) / 50 * handUpperLength
+		} ELSE {
+			handUpperLength
+		} FI
+	} FI;
+	var a = IF (percent < 25) {
+		(!in) ? 1 : 1.0 * percent / 25
+	} ELSE {
+		IF (percent < 75) {
+			1
+		} ELSE {
+			(!out) ? 1 : 1.0 - 1.0 * (percent - 75) / 25
+		} FI
+	} FI;
+	return Paint(Icons.hand, x, y, handSize, angle, 2000, a);
+}
+
+var drawDrop(var id, var lane, var timesNow) {
+	var x = lines[lane].x(timesNow);
+	var y = lines[lane].y(timesNow);
+	var w = lines[lane].width(timesNow);
+	var l = x - w, r = x + w;
+	var t = y + w, b = y - w;
+	return Draw(id, l, b, l, t, r, t, r, b, 1000, 1);
+}
+
+var drawStatic(var id, var lane) {
+	var x = lines[lane].x(appearTimeLength);
+	var y = lines[lane].y(appearTimeLength);
+	var w = lines[lane].width(appearTimeLength);
+	var l = x - w, r = x + w;
+	var t = y + w, b = y - w;
+	return Draw(id, l, b, l, t, r, t, r, b, 1000, 1);
+}
+
+var drawHoldBody(var lastBeat, var lastLine, var thisBeat, var thisLine, var timeNow) {
+    var lastTime = timeNow - lastBeat + appearTimeLength;
+    var thisTime = timeNow - thisBeat + appearTimeLength;
+    var realLastX = newLerp(lines[lastLine].lowPosition, lines[lastLine].highPosition, lines[lastLine].EaseVal(Min(1, 1 - lastTime / appearTimeLength)));
+    var realThisX = newLerp(lines[thisLine].lowPosition, lines[thisLine].highPosition, lines[thisLine].EaseVal(Min(1, 1 - thisTime / appearTimeLength)));
+    var lastX = If(
+        lastTime > appearTimeLength,
+        newLerp(lines[lastLine].lowPosition, lines[thisLine].lowPosition, (lastTime - appearTimeLength) / (thisBeat - lastBeat)),
+        realLastX
+    );
+    var lastY = lines[lastLine].y(Min(appearTimeLength, lastTime));
+    var lastW = lines[lastLine].width(Min(appearTimeLength, lastTime)) * 0.8;
+    var thisX = If(
+        thisTime < 0,
+        newLerp(lines[thisLine].highPosition, lines[lastLine].highPosition, (0 - thisTime) / (thisBeat - lastBeat)),
+        realThisX
+    );
+    var thisY = lines[thisLine].y(Min(appearTimeLength, Max(0, thisTime)));
+    var thisW = lines[thisLine].width(Min(appearTimeLength, Max(0, thisTime))) * 0.8;
+    return Draw(Sprites.HoldBody, lastX - lastW, lastY, thisX - thisW, thisY, thisX + thisW, thisY, lastX + lastW, lastY, 0, 1);
+};

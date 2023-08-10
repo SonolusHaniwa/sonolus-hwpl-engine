@@ -20,5 +20,7 @@ auto preprocess = definePreprocess({
             ui.navigationNext.set(nextX, nextY, 1, 0.5, previousWidth, previousHeight, 0, ui.navigationConfiguration.alpha, true),
             ui.instruction.set(0, 0, 0.5, 0.5, instructionWidth, instructionHeight, 0, ui.instructionConfiguration.alpha, true)
         });
-    }()
+    }(),
+    tutorialStartTime.set(times.now),
+    tutorialNavigation.set(0)
 });

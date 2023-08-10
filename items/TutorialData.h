@@ -182,6 +182,8 @@ namespace tutorialData {
 
     Variable<TutorialMemoryId> ForPt;
     Variable<TutorialInstructionId> instruction;
+    Variable<TutorialMemoryId> tutorialStartTime;
+    Variable<TutorialMemoryId> tutorialNavigation;
 
     class times {
         public:
@@ -189,6 +191,8 @@ namespace tutorialData {
         FuncNode now = RuntimeUpdate.get(0);
         FuncNode delta = RuntimeUpdate.get(1);
     }times;
+
+    FuncNode timesNow = times.now - tutorialStartTime.get();
 
     class navigation {
         public:
