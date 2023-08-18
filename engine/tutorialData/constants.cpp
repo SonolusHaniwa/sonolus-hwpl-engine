@@ -16,41 +16,19 @@ class stage {
 	const var h = screen.h * stageMaxPercentage;
 }stage;
 
-const var t = If(
-	LevelOption.get(Options.lockAspectRatio) && screen.aspectRatio < targetAspectRatio,
-	screen.w / targetAspectRatio * 0.5,
-	screen.t
-);
+const var t = screen.t;
 const var b = t - stage.h;
-const var speed = stage.h / defaultAppearTime / 5.0 * LevelOption.get(Options.noteSpeed);
+const var speed = stage.h / defaultAppearTime;
 const var appearTimeLength = stage.h / speed;
+const var frozenTimeLength = 1.0;
+const var frozenTimes = 4;
 const double noteSize = 128.0 / 1080.0;
 var clickBoxl = stage.w / (-2.0) - stage.w / lineNumber * (maxSize - 1.0) / 2.0;
 var clickBoxr = stage.w / 2.0 + stage.w / lineNumber * (maxSize - 1.0) / 2.0;
 var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
 var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
-
-class judgment {
-	public:
-
-	var perfect = If(
-		LevelOption.get(Options.strictJudge) == 1,
-		0.035, 0.05
-	);
-	var great = If(
-		LevelOption.get(Options.strictJudge) == 1,
-		0.05, 0.10
-	);
-	var good = If(
-		LevelOption.get(Options.strictJudge) == 1,
-		0.08, 0.15
-	);
-}judgment;
-
-class score {
-	public:
-
-	var perfect = 1;
-	var great = 0.75;
-	var good = 0.5;
-}score;
+var handSize = 0.25 * ui.instructionConfiguration.scale;
+var handCircleR = handSize;
+var handStartAngle = 30;
+var handEndAngle = 60;
+var handUpperLength = 0.5;

@@ -23,6 +23,14 @@ EngineConfigurationUI configurationUI = {
         .scale = 1.0,
         .alpha = 1.0
     },
+    .tutorialNavigationVisibility = {
+        .scale = 1.0,
+        .alpha = 1.0
+    },
+    .tutorialInstructionVisibility = {
+        .scale = 1.0,
+        .alpha = 1.0
+    },
     .judgmentAnimation = {
         .scale = {
             .from = 0.0,

@@ -8,6 +8,7 @@ class EngineConfigurationOption {
 
     string name = "";
     string scope = "";
+    int advanced = 0;
     int standard = 0;
     string type = "slider";
     double def = 0;
@@ -108,6 +109,8 @@ class EngineConfigurationUI {
     EngineConfigurationVisibility comboVisibility = {};
     EngineConfigurationVisibility primaryMetricVisibility = {};
     EngineConfigurationVisibility secondaryMetricVisbility = {};
+    EngineConfigurationVisibility tutorialNavigationVisibility = {};
+    EngineConfigurationVisibility tutorialInstructionVisibility = {};
     EngineConfigurationAnimation judgmentAnimation = {};
     EngineConfigurationAnimation comboAnimation = {};
     string judgmentErrorStyle = "";
@@ -125,6 +128,8 @@ class EngineConfigurationUI {
         res["comboVisibility"] = comboVisibility.toJsonObject();
         res["primaryMetricVisibility"] = primaryMetricVisibility.toJsonObject();
         res["secondaryMetricVisibility"] = secondaryMetricVisbility.toJsonObject();
+        res["tutorialNavigationVisibility"] = tutorialNavigationVisibility.toJsonObject();
+        res["tutorialInstructionVisibility"] = tutorialInstructionVisibility.toJsonObject();
         res["judgmentAnimation"] = judgmentAnimation.toJsonObject();
         res["comboAnimation"] = comboAnimation.toJsonObject();
         res["judgmentErrorStyle"] = judgmentErrorStyle;

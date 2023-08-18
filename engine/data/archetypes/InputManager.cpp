@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 Array<LevelMemoryId> usedTouchIds = Array<LevelMemoryId>(16);
 auto isUsed = [](Touch touch){return Execute({usedTouchIds.has(touch.id)});};

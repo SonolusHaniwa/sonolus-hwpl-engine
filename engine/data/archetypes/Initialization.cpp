@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 class Initialization: public Archetype {
     public:

@@ -8,9 +8,7 @@
 #include"items/FuncNode.h"
 #include"items/EngineConfiguration.h"
 #include"items/EngineData.h"
-
-EngineData engineData;
-EngineConfiguration engineConfiguration;
+#include"items/EngineTutorialData.h"
 
 #include"functions/functions.h"
 #ifndef DISABLE_REDEFINE
@@ -21,11 +19,19 @@ typedef FuncNode var;
 typedef FuncNode let;
 #endif
 
+EngineData engineData;
+EngineTutorialData engineTutorialData;
+EngineConfiguration engineConfiguration;
+FuncNode tutorialPreprocess = 0;
+FuncNode tutorialNavigate = 0;
+FuncNode tutorialUpdate = 0;
+
 #include"blocks/Archetype.h"
 #include"blocks/Define.h"
-#include"blocks/Blocks.h"
+#include"blocks/Pointer.h"
 
-#include"items/Variables.h"
+#include"items/PlayData.h"
+#include"items/TutorialData.h"
 
 map<EngineDataNode, int> hashMap;
 
@@ -50,9 +56,35 @@ int buildScript(FuncNode script, int blockCounter = 0) {
     return hashMap[res];
 }
 
+int buildScript2(FuncNode script, int blockCounter = 0) {
+    EngineDataNode res;
+    if (script.isValue == true) res = EngineDataValueNode(script.value);
+    else {
+        // Return 函数判断
+        if (script.func == "Return") {
+            script.func = "Break"; FuncNode code = script.args[0];
+            script.args = {blockCounter, code};
+        }
+        // 其余函数
+        vector<double> args;
+        for (int i = 0; i < script.args.size(); i++) 
+            args.push_back(buildScript2(
+                script.args[i],
+                blockCounter + (script.func == "Block")));
+        res = EngineDataFunctionNode(script.func, args);
+    } if (hashMap.find(res) != hashMap.end()) return hashMap[res];
+    hashMap[res] = engineTutorialData.nodes.size(); engineTutorialData.nodes.push_back(res);
+    return hashMap[res];
+}
+
 int buildFuncNode(FuncNode func) {
     FuncNode res = FuncNode("Block", {func});
     return buildScript(res);
+}
+
+int buildFuncNode2(FuncNode func) {
+    FuncNode res = FuncNode("Block", {func});
+    return buildScript2(res);
 }
 
 template<typename T>
@@ -85,13 +117,20 @@ void buildArchetype(T unused, Args... args) {
     buildArchetype<T>(T()); buildArchetype<Args...>(args...);
 }
 
-template<typename T, typename... Args>
+template<typename... Args>
 void build(buffer& configurationBuffer, buffer& dataBuffer) {
     Json::Value configuration = engineConfiguration.toJsonObject();
-    buildArchetype<T, Args...>(T(), Args()...);
-    Json::Value data = engineData.toJsonObject();
     configurationBuffer = compress_gzip(json_encode(configuration));
+#ifdef play
+    buildArchetype<Args...>(Args()...);
+    Json::Value data = engineData.toJsonObject();
     dataBuffer = compress_gzip(json_encode(data));
+#elif tutorial
+    engineTutorialData.preprocess = buildFuncNode2(tutorialPreprocess);
+    engineTutorialData.navigate = buildFuncNode2(tutorialNavigate);
+    engineTutorialData.update = buildFuncNode2(tutorialUpdate);
+    dataBuffer = compress_gzip(json_encode(engineTutorialData.toJsonObject()));
+#endif
 }
 
 #define IF(cond) If(cond, Execute(

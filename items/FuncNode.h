@@ -34,10 +34,6 @@ class FuncNode {
     }
 };
 
-class FuncNode2 {
-
-};
-
 ostream& operator << (ostream& out, FuncNode x) {
     out << x.stringify();
     return out;

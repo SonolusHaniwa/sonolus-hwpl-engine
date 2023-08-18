@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 auto newLerp = [](var a, var b, var x){
 	var K = b - a;

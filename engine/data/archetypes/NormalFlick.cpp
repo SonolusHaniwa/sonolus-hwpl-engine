@@ -1,5 +1,4 @@
 using namespace std;
-using namespace playData;
 
 class NormalFlick: public Archetype {
     public:
