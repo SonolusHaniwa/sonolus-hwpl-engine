@@ -51,14 +51,16 @@ class NormalFlick: public Archetype {
             Return(0)
         } FI,
         FOR (i, 0, touches.size, 1) {
-            IF (touches[i].st >= beat - judgment.good && !isUsed(touches[i]) && lines[lane].inClickBoxST(touches[i]) && movedLast(touches[i])) {
+            IF (touches[i].st >= beat - judgment.good && !isUsed(touches[i]) && lines[lane].inClickBoxST(touches[i])) {
                 markAsUsed(touches[i]),
-				EntityInput.set(1, touches[i].t - beat),
-				EntityInput.set(0, 1),
-				Play(Clips.Flick, minSFXDistance),
-				EntityInput.set(2, Buckets.NormalFlick),
-				EntityInput.set(3, touches[i].t - beat),
-				EntityDespawn.set(0, 1)
+                IF (movedLast(touches[i])) {
+                    EntityInput.set(1, touches[i].t - beat),
+                    EntityInput.set(0, 1),
+                    Play(Clips.Flick, minSFXDistance),
+                    EntityInput.set(2, Buckets.NormalFlick),
+                    EntityInput.set(3, touches[i].t - beat),
+                    EntityDespawn.set(0, 1)
+                } FI
             } FI,
         } DONE,
     };

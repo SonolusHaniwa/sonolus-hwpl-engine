@@ -86,7 +86,7 @@ auto DrawHoldBody = [](){
 };
 
 auto movedLast = [](Touch touch) {
-    return Abs(touch.dx) >= 0.05 && Abs(touch.dy) >= 0.05;
+    return Abs(touch.dx) >= 0.01 && Abs(touch.dy) >= 0.01;
 };
 
 auto judgeNote = [](){

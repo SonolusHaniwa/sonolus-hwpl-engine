@@ -18,16 +18,16 @@ class Sprites {
 }Sprites;
 
 auto skins = defineSkins<class Sprites>({
-    {"Hanipure Stage", Sprites.Stage},
-    {"Hanipure Judge Line", Sprites.JudgeLine},
-    {"Hanipure Normal Note", Sprites.NormalNote},
-    {"Hanipure Highlighted Note", Sprites.HighlightedNote},
-    {"Hanipure Normal Flick", Sprites.NormalFlick},
-    {"Hanipure Highlighted Flick", Sprites.HighlightedFlick},
-    {"Hanipure Normal Hold", Sprites.NormalHold},
-    {"Hanipure Highlighted Hold", Sprites.HighlightedHold},
-    {"Hanipure Hold Line", Sprites.HoldLine},
-    {"Hanipure Judge Note", Sprites.JudgeNote},
-    {"Hanipure Hold Body", Sprites.HoldBody},
-    {"Hanipure Sync Line", Sprites.SyncLine}
+    {SkinSpriteName.StageCover, Sprites.Stage},
+    {SkinSpriteName.JudgmentLine, Sprites.JudgeLine},
+    {SkinSpriteName.NoteHeadGreen, Sprites.NormalNote},
+    {SkinSpriteName.NoteTailGreen, Sprites.HighlightedNote},
+    {SkinSpriteName.NoteHeadRed, Sprites.NormalFlick},
+    {SkinSpriteName.NoteTailRed, Sprites.HighlightedFlick},
+    {SkinSpriteName.NoteHeadBlue, Sprites.NormalHold},
+    {SkinSpriteName.NoteTailBlue, Sprites.HighlightedHold},
+    {SkinSpriteName.NoteTickBlue, Sprites.HoldLine},
+    {SkinSpriteName.NoteSlot, Sprites.JudgeNote},
+    {SkinSpriteName.NoteConnectionBlue, Sprites.HoldBody},
+    {SkinSpriteName.SimultaneousConnectionNeutral, Sprites.SyncLine}
 });
