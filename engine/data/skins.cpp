@@ -26,8 +26,8 @@ auto skins = defineSkins<class Sprites>({
     {SkinSpriteName.NoteTailRed, Sprites.HighlightedFlick},
     {SkinSpriteName.NoteHeadBlue, Sprites.NormalHold},
     {SkinSpriteName.NoteTailBlue, Sprites.HighlightedHold},
-    {SkinSpriteName.NoteConnectionBlue, Sprites.HoldLine},
-    {SkinSpriteName.NoteTickBlue, Sprites.JudgeNote},
-    {SkinSpriteName.NoteSlot, Sprites.HoldBody},
+    {SkinSpriteName.NoteTickBlue, Sprites.HoldLine},
+    {SkinSpriteName.NoteSlot, Sprites.JudgeNote},
+    {SkinSpriteName.NoteConnectionBlue, Sprites.HoldBody},
     {SkinSpriteName.SimultaneousConnectionNeutral, Sprites.SyncLine}
 });
