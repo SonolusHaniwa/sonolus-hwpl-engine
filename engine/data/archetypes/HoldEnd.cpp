@@ -64,6 +64,7 @@ class HoldEnd: public Archetype {
         } FI,
         // 超时
         IF (times.now > beat + judgment.good) {
+            StopLooped(playLoopedId.get()),
             EntityInput.set(0, 0),
             EntityDespawn.set(0, 1)
         } FI
