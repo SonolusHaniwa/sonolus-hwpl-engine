@@ -12,10 +12,10 @@ class Clips {
 }Clips;
 
 auto effects = defineEffects<class Clips>({
-    {"Hanipure Perfect", Clips.Perfect},
-    {"Hanipure Great", Clips.Great},
-    {"Hanipure Good", Clips.Good},
-    {"Hanipure Stage", Clips.Stage},
-    {"Hanipure Flick", Clips.Flick},
-    {"Hanipure Hold", Clips.Hold}
+    {EffectClipName.Perfect, Clips.Perfect},
+    {EffectClipName.Great, Clips.Great},
+    {EffectClipName.Good, Clips.Good},
+    {EffectClipName.Stage, Clips.Stage},
+    {EffectClipName.PerfectAlternative, Clips.Flick},
+    {EffectClipName.Hold, Clips.Hold}
 });
