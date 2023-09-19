@@ -15,8 +15,9 @@ class line {
 	line operator [] (var i) {
 		return line(i);
 	}
-	var EaseVal(var t) {
-		return 1 - (1 - t) * (1 - t);
+	var EaseVal(var x) {
+		x = 1 - x;
+		return Remap(Power({1.06, -45}), 1.06, 1.00, -0.06, Power({1.06, 45 * (x - 1)}));
 	}
 
 	const var highPosition = (i - lineNumber / 2.0 - 0.5) * highWidth * stage.w / lineNumber;
@@ -33,6 +34,13 @@ class line {
 	var inClickBox(Touch touch){
 		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3 * maxSize;
 		var clickBoxr = lowPosition + stage.w / lineNumber * 0.3 * maxSize;
+		var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
+		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
+		return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
+	};
+	var inStrictClickBox(Touch touch) {
+		var clickBoxl = lowPosition - stage.w / lineNumber * 0.3;
+		var clickBoxr = lowPosition + stage.w / lineNumber * 0.3;
 		var clickBoxt = stage.h / (-2.0) + 512.0 / 1080.0;
 		var clickBoxb = stage.h / (-2.0) - 512.0 / 1080.0;
 		return clickBoxl <= touch.x && touch.x <= clickBoxr && clickBoxb <= touch.y && touch.y <= clickBoxt;
@@ -107,3 +115,23 @@ auto judgeNote = [](){
         }
     );
 };
+
+var spawnLaneEffect(var lane) {
+	var t = lines[lane].y(0), b = lines[lane].y(appearTimeLength);
+	var tx = lines[lane].x(0), bx = lines[lane].x(appearTimeLength);
+	var tw = lines[lane].width(0) * 0.8, bw = lines[lane].width(appearTimeLength) * 0.8;
+	return SpawnParticleEffect(Effects.stage, bx - bw, b, tx - tw, t, tx + tw, t, bx + bw, b, 0.5, 0);
+}
+
+var spawnParticleEffect(var circular, var linear, var lane) {
+	var x = lines[lane].x(appearTimeLength);
+	var y = lines[lane].y(appearTimeLength);
+	var w = lines[lane].width(appearTimeLength);
+	var l = x - w, r = x + w, l2 = x - w * 2, r2 = x + w * 2;
+	var b = y, t = y + 0.5, b2 = y - 0.25, t2 = y + 0.25;
+	return Execute({
+		SpawnParticleEffect(linear, l, b, l, t, r, t, r, b, 0.5, 0),
+		SpawnParticleEffect(circular, l2, b2, l2, t2, r2, t2, r2, b2, 0.5, 0),
+		spawnLaneEffect(lane)
+	});
+}

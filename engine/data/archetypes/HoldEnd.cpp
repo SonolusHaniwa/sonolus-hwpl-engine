@@ -44,6 +44,7 @@ class HoldEnd: public Archetype {
                 Play(Clips.Perfect, minSFXDistance),
                 EntityInput.set(2, Buckets.HoldEnd),
                 EntityInput.set(3, 0),
+				spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
                 EntityDespawn.set(0, 1)
             } FI,
         } FI,
@@ -95,6 +96,7 @@ class HoldEnd: public Archetype {
                         judgeNote(),
                         EntityInput.set(2, Buckets.HoldEnd),
                         EntityInput.set(3, touches[i].t - beat),
+						spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
                         EntityDespawn.set(0, 1)
                     } ELSE {
                         StopLooped(playLoopedId.get()),

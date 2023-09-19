@@ -42,8 +42,14 @@ class Stage: public Archetype {
         FOR (i, 0, touches.size, 1) {
             IF (touches[i].started && !isUsed(touches[i]) && inClickBox(touches[i])) {
                 onEmptyTop(),
-                markAsUsed(touches[i])
             } FI,
+			IF (!(touches[i].started && !isUsed(touches[i]))) { CONTINUE } FI,
+			IF (lines[1].inStrictClickBox(touches[i])) { spawnLaneEffect(1) } FI,
+			IF (lines[2].inStrictClickBox(touches[i])) { spawnLaneEffect(2) } FI,
+			IF (lines[3].inStrictClickBox(touches[i])) { spawnLaneEffect(3) } FI,
+			IF (lines[4].inStrictClickBox(touches[i])) { spawnLaneEffect(4) } FI,
+			IF (lines[5].inStrictClickBox(touches[i])) { spawnLaneEffect(5) } FI,
+			IF (lines[6].inStrictClickBox(touches[i])) { spawnLaneEffect(6) } FI
         } DONE,
     };
 };

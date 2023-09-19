@@ -42,6 +42,7 @@ class NormalFlick: public Archetype {
             Play(Clips.Flick, minSFXDistance),
             EntityInput.set(2, Buckets.NormalFlick),
             EntityInput.set(3, 0),
+			spawnParticleEffect(Effects.flickCircular, Effects.flickLinear, lane),
             EntityDespawn.set(0, 1)
         } FI
     };
@@ -59,6 +60,7 @@ class NormalFlick: public Archetype {
                     Play(Clips.Flick, minSFXDistance),
                     EntityInput.set(2, Buckets.NormalFlick),
                     EntityInput.set(3, touches[i].t - beat),
+					spawnParticleEffect(Effects.flickCircular, Effects.flickLinear, lane),
                     EntityDespawn.set(0, 1)
                 } FI
             } FI,

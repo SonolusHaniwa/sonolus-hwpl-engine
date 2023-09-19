@@ -44,6 +44,7 @@ class HoldFlickEnd: public Archetype {
                 Play(Clips.Flick, minSFXDistance),
                 EntityInput.set(2, Buckets.HoldFlickEnd),
                 EntityInput.set(3, 0),
+				spawnParticleEffect(Effects.flickCircular, Effects.flickLinear, lane),
                 EntityDespawn.set(0, 1)
             } FI,
         } FI,
@@ -93,6 +94,7 @@ class HoldFlickEnd: public Archetype {
                         Play(Clips.Flick, minSFXDistance),
                         EntityInput.set(2, Buckets.HoldFlickEnd),
                         EntityInput.set(3, touches[i].t - beat),
+						spawnParticleEffect(Effects.flickCircular, Effects.flickLinear, lane),
                         EntityDespawn.set(0, 1)
                     } ELSE {
                         IF (touches[i].ended == 1) {

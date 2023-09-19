@@ -41,6 +41,7 @@ class HoldLine: public Archetype {
                 Play(Clips.Perfect, minSFXDistance),
                 EntityInput.set(2, Buckets.HoldLine),
                 EntityInput.set(3, 0),
+				spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
                 EntityDespawn.set(0, 1)
             } FI,
         } FI,
@@ -84,6 +85,7 @@ class HoldLine: public Archetype {
                         Play(Clips.Perfect, minSFXDistance),
                         EntityInput.set(2, Buckets.HoldLine),
                         EntityInput.set(3, 0),
+						spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
                         EntityDespawn.set(0, 1)
                     } ELSE {
                         IF (touches[i].ended == 1) {
