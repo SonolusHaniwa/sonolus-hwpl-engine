@@ -42,6 +42,7 @@ class HoldStart: public Archetype {
             Play(Clips.Perfect, minSFXDistance),
             EntityInput.set(2, Buckets.NormalHold),
             EntityInput.set(3, 0),
+			spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
             EntityDespawn.set(0, 1)
         } FI,
     };
@@ -60,6 +61,7 @@ class HoldStart: public Archetype {
                 judgeNote(),
                 EntityInput.set(2, Buckets.NormalHold),
                 EntityInput.set(3, touches[i].t - beat),
+				spawnParticleEffect(Effects.holdCircular, Effects.holdLinear, lane),
                 EntityDespawn.set(0, 1)
             } FI,
         } DONE,

@@ -42,6 +42,7 @@ class NormalNote: public Archetype {
             EntityInput.set(2, Buckets.NormalNote),
             EntityInput.set(3, 0),
             Play(Clips.Perfect, minSFXDistance),
+			spawnParticleEffect(Effects.noteCircular, Effects.noteLinear, lane),
             EntityDespawn.set(0, 1)
         } FI
     };
@@ -56,6 +57,7 @@ class NormalNote: public Archetype {
         FOR (i, 0, touches.size, 1) {
             IF (touches[i].started && !isUsed(touches[i]) && lines[lane].inClickBox(touches[i])) {
                 markAsUsed(touches[i]),
+				spawnParticleEffect(Effects.noteCircular, Effects.noteLinear, lane),
                 EntityInput.set(1, touches[i].t - beat),
                 judgeNote(),
                 EntityInput.set(2, Buckets.NormalNote),

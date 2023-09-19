@@ -1,28 +1,36 @@
 using namespace std;
 
-namespace tutorialData {
-    const int TutorialMemoryId = 2000;
-    const int TutorialDataId = 2001;
-    const int TutorialInstructionId = 2002;
+namespace previewData {
+    const int PreviewDataId = 2000;
+    const int PreviewOptionId = 2001;
+    const int EntityDataArrayId = 4100;
+    const int EntitySharedMemoryArrayId = 4101;
+    const int EntityInfoArrayId = 4102;
+    const int EntityDataId = 4000;
+    const int EntitySharedMemoryId = 4001;
+    const int EntityInfoId = 4002;
+    const int EngineRomId = 3000;
     const int TemporaryMemoryId = 10000;
     const int RuntimeEnvironmentId = 1000;
-    const int RuntimeUpdateId = 1001;
+    const int RuntimeCanvasId = 1001;
     const int RuntimeSkinTransformId = 1002;
-    const int RuntimeParticleTransformId = 1003;
-    const int RuntimeBackgroundId = 1004;
-    const int RuntimeUIId = 1005;
-    const int RuntimeUIConfigurationId = 1006;
+    const int RuntimeUIId = 1003;
+    const int RuntimeUIConfigurationId = 1004;
 
     Pointer<RuntimeEnvironmentId> RuntimeEnvironment;
-    Pointer<RuntimeUpdateId> RuntimeUpdate;
+    Pointer<RuntimeCanvasId> RuntimeCanvas;
     Pointer<RuntimeSkinTransformId> RuntimeSkinTransform;
-    Pointer<RuntimeParticleTransformId> RuntimeParticleTransform;
-    Pointer<RuntimeBackgroundId> RuntimeBackground;
     Pointer<RuntimeUIId> RuntimeUI;
     Pointer<RuntimeUIConfigurationId> RuntimeUIConfiguration;
-    Pointer<TutorialMemoryId> TutorialMemory;
-    Pointer<TutorialDataId> TutorialData;
-    Pointer<TutorialInstructionId> TutorialInstruction;
+    Pointer<PreviewDataId> PreviewData;
+    Pointer<PreviewOptionId> PreviewOption;
+    Pointer<EngineRomId> EngineRom;
+    Pointer<EntityDataArrayId> EntityDataArray;
+    Pointer<EntityDataId> EntityData;
+    Pointer<EntitySharedMemoryArrayId> EntitySharedMemoryArray;
+    Pointer<EntitySharedMemoryId> EntitySharedMemory;
+    Pointer<EntityInfoArrayId> EntityInfoArray;
+    Pointer<EntityInfoId> EntityInfo;
     Pointer<TemporaryMemoryId> TemporaryMemory;
 
     class screen {
@@ -36,6 +44,20 @@ namespace tutorialData {
         FuncNode w = Multiply({aspectRatio, 2});
         FuncNode h = 2;
     }screen;
+
+    class canvas {
+        public:
+
+        FuncNode scroll = RuntimeCanvas.get(0);
+        FuncNode size = RuntimeCanvas.get(1);
+
+        FuncNode set(FuncNode scroll, FuncNode size) {
+            return Execute({
+                RuntimeCanvas.set(0, scroll),
+                RuntimeCanvas.set(1, size),
+            });
+        }
+    }canvas;
 
     class ui {
         public:
@@ -85,13 +107,8 @@ namespace tutorialData {
         };
 
         layout menu = layout(0);
-        layout navigationPrevious = layout(1);
-        layout navigationNext = layout(2);
-        layout instruction = layout(3);
 
         configuration menuConfiguration = configuration(0);
-        configuration navigationConfiguration = configuration(1);
-        configuration instructionConfiguration = configuration(2);
     }ui;
 
     int allocatorSize[10001] = {0};
@@ -180,23 +197,5 @@ namespace tutorialData {
         }
     };
 
-    Variable<TutorialMemoryId> ForPt;
-    Variable<TutorialInstructionId> instruction;
-    Variable<TutorialMemoryId> tutorialStartTime;
-    Variable<TutorialMemoryId> tutorialNavigation;
-
-    class times {
-        public:
-
-        FuncNode now = RuntimeUpdate.get(0);
-        FuncNode delta = RuntimeUpdate.get(1);
-    }times;
-
-    FuncNode timesNow = Subtract({times.now, tutorialStartTime.get()});
-
-    class navigation {
-        public:
-
-        FuncNode direction = RuntimeUpdate.get(2);
-    }navigation;
+	Variable<TemporaryMemoryId> ForPt;
 };
